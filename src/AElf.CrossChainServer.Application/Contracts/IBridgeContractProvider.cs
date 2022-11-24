@@ -25,4 +25,6 @@ public interface IBridgeContractProvider
     Task<string> GetSwapIdByTokenAsync(string chainId, string contractAddress, string fromChainId, string symbol);
     Task<string> SwapTokenAsync(string chainId, string contractAddress, string privateKey, string swapId, string receiptId, string originAmount,
         string receiverAddress);
+
+    Task<bool> IsTransferCanReceiveAsync(string chainId, string contractAddress, string symbol, string amount);
 }

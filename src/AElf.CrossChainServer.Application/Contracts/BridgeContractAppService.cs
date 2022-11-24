@@ -120,4 +120,12 @@ public class BridgeContractAppService : CrossChainServerAppService, IBridgeContr
             _bridgeContractOptions.ContractAddresses[chainId].BridgeOutContract, privateKey, swapId, receiptId,
             originAmount, receiverAddress);
     }
+
+    public async Task<bool> IsTransferCanReceiveAsync(string chainId, string symbol, string amount)
+    {
+        var provider = await _bridgeContractProviderFactory.GetBridgeContractProviderAsync(chainId);
+        return await provider.IsTransferCanReceiveAsync(chainId,
+            _bridgeContractOptions.ContractAddresses[chainId].BridgeOutContract,
+            symbol, amount);
+    }
 }

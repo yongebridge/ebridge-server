@@ -178,4 +178,9 @@ public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvid
     {
         throw new NotImplementedException();
     }
+
+    public Task<bool> IsTransferCanReceiveAsync(string chainId, string contractAddress, string symbol, string amount)
+    {
+        throw new NotImplementedException();
+    }
 }

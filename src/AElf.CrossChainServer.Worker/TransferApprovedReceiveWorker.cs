@@ -6,22 +6,21 @@ using Volo.Abp.Threading;
 
 namespace AElf.CrossChainServer.Worker;
 
-public class TransferAutoReceiveWorker: AsyncPeriodicBackgroundWorkerBase
+public class TransferApprovedReceiveWorker : AsyncPeriodicBackgroundWorkerBase
 {
     private readonly ICrossChainTransferAppService _crossChainTransferAppService;
 
-    public TransferAutoReceiveWorker(AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
+    public TransferApprovedReceiveWorker(AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
         ICrossChainTransferAppService crossChainTransferAppService) : base(timer,
         serviceScopeFactory)
     {
-        Timer.Period = 1000 * 60;
+        Timer.Period = 1000 * 180;
         
         _crossChainTransferAppService = crossChainTransferAppService;
     }
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _crossChainTransferAppService.UpdateReceiveTransactionAsync();
-        await _crossChainTransferAppService.AutoReceiveAsync();
+        await _crossChainTransferAppService.UpdateTransferApprovedReceiveAsync();
     }
 }

@@ -19,4 +19,5 @@ public interface IBridgeContractAppService
     Task<string> GetSwapIdByTokenAsync(string chainId, string fromChainId, string symbol);
     Task<string> SwapTokenAsync(string chainId, string swapId, string receiptId, string originAmount,
         string receiverAddress);
+    Task<bool> IsTransferCanReceiveAsync(string chainId, string symbol, string amount);
 }
