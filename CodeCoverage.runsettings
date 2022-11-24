@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File name extension must be .runsettings -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>      
+       <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[xunit.*]*,[*Tests]*</Exclude> <!-- [Assembly-Filter]Type-Filter -->
+          <ExcludeByFile>**/test/**/*.cs,**/src/AElf.CrossChainServer.IdentityServer/**/*.cs,**/src/AElf.CrossChainServer.DbMigrator/**/*.cs,**/src/AElf.CrossChainServer.EntityHandler/**/*.cs,**/src/AElf.CrossChainServer.ContractEventHandler/**/*.cs,**/src/AElf.CrossChainServer.HttpApi.Host/**/*.cs,**/src/AElf.CrossChainServer.HttpApi.Client/**/*.cs,**/src/AElf.CrossChainServer.Application.Contracts/Contracts/**/*.cs,**/src/AElf.CrossChainServer.Application.Contracts/Permissions/**/*.cs,**/src/AElf.CrossChainServer.EntityFrameworkCore/Migrations/*.cs</ExcludeByFile>
+          <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute</ExcludeByAttribute>
+          <SingleHit>false</SingleHit>
+        </Configuration>
+      </DataCollector>    
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
