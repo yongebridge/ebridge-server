@@ -7,6 +7,7 @@ using AElf.CrossChainServer.Settings;
 using AElf.CrossChainServer.Tokens;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Volo.Abp.Json;
 using Volo.Abp.SettingManagement;
 
 namespace AElf.CrossChainServer.Worker.IndexerSync;
@@ -19,8 +20,8 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
 
     public CrossChainTransferIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
         ICrossChainTransferAppService crossChainTransferAppService, IChainAppService chainAppService,
-        ITokenAppService tokenAppService) : base(
-        graphQlClient, settingManager)
+        ITokenAppService tokenAppService, IJsonSerializer jsonSerializer) : base(
+        graphQlClient, settingManager,jsonSerializer)
     {
         _crossChainTransferAppService = crossChainTransferAppService;
         _chainAppService = chainAppService;
@@ -55,8 +56,8 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
         switch (transfer.TransferType)
         {
             case TransferType.Transfer:
-                var toChain = await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(transfer.ToChainId));
-                if (toChain == null)
+                var toChainId = await GetChainIdAsync(transfer.ToChainId, transfer.CrossChainType);
+                if(toChainId == null)
                 {
                     return;
                 }
@@ -74,15 +75,15 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                     ToAddress = transfer.ToAddress,
                     TransferTokenId = transferToken.Id,
                     FromChainId = chain.Id,
-                    ToChainId = toChain.Id,
+                    ToChainId = toChainId,
                     TransferBlockHeight = transfer.BlockHeight,
                     TransferTime = transfer.TransferTime,
                     TransferTransactionId = transfer.TransferTransactionId
                 });
                 break;
             case TransferType.Receive:
-                var fromChain = await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(transfer.FromChainId));
-                if (fromChain == null)
+                var formChainId = await GetChainIdAsync(transfer.FromChainId, transfer.CrossChainType);
+                if(formChainId == null)
                 {
                     return;
                 }
@@ -97,7 +98,7 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                 {
                     ReceiveAmount = transfer.ReceiveAmount / (decimal)Math.Pow(10, receiveToken.Decimals),
                     ReceiveTime = transfer.ReceiveTime,
-                    FromChainId = fromChain.Id,
+                    FromChainId = formChainId,
                     ReceiveTransactionId = transfer.ReceiveTransactionId,
                     ToChainId = chain.Id,
                     TransferTransactionId = transfer.TransferTransactionId,
@@ -107,6 +108,26 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                 });
                 break;
         }
+    }
+
+    private async Task<string> GetChainIdAsync(string originalChainId, CrossChainType crossChainType)
+    {
+        var chainId = originalChainId;
+        if (crossChainType == CrossChainType.Homogeneous)
+        {
+            return chainId;
+        }
+
+        var toChain =
+            await _chainAppService.GetByAElfChainIdAsync(
+                ChainHelper.ConvertBase58ToChainId(originalChainId));
+        if (toChain == null)
+        {
+            return null;
+        }
+
+        chainId = toChain.Id;
+        return chainId;
     }
 
     private GraphQLRequest GetRequest(string chainId, long startHeight, long endHeight)
@@ -161,6 +182,7 @@ public class CrossChainTransferInfo : GraphQLDto
     public string TransferTokenSymbol { get; set; }
     public string ReceiveTokenSymbol { get; set; }
     public TransferType TransferType { get; set; }
+    public CrossChainType CrossChainType { get; set; }
 }
 
 public enum TransferType

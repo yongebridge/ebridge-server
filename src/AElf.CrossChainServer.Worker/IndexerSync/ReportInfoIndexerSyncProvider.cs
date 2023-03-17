@@ -7,6 +7,7 @@ using AElf.CrossChainServer.Settings;
 using AElf.CrossChainServer.Tokens;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Volo.Abp.Json;
 using Volo.Abp.SettingManagement;
 
 namespace AElf.CrossChainServer.Worker.IndexerSync;
@@ -17,9 +18,9 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
     private readonly IChainAppService _chainAppService;
 
     public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
-        IChainAppService chainAppService,
+        IChainAppService chainAppService,IJsonSerializer jsonSerializer,
         IReportInfoAppService reportInfoAppService) : base(
-        graphQlClient, settingManager)
+        graphQlClient, settingManager,jsonSerializer)
     {
         _chainAppService = chainAppService;
         _reportInfoAppService = reportInfoAppService;

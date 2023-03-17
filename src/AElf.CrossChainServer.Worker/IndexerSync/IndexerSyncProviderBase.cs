@@ -7,6 +7,7 @@ using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Json;
 using Volo.Abp.SettingManagement;
 
 namespace AElf.CrossChainServer.Worker.IndexerSync;
@@ -15,25 +16,32 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 {
     protected readonly IGraphQLClient GraphQlClient;
     protected readonly ISettingManager SettingManager;
+    protected readonly IJsonSerializer JsonSerializer;
+
     public ILogger<IndexerSyncProviderBase> Logger { get; set; }
 
     private const int MaxRequestCount = 1000;
 
-    protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, ISettingManager settingManager)
+    protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, ISettingManager settingManager,
+        IJsonSerializer jsonSerializer)
     {
         GraphQlClient = graphQlClient;
         SettingManager = settingManager;
+        JsonSerializer = jsonSerializer;
         Logger = NullLogger<IndexerSyncProviderBase>.Instance;
     }
 
     public async Task ExecuteAsync(string chainId)
     {
-        var syncHeight = await SettingManager.GetOrNullGlobalAsync(SyncType);
-        var startHeight = syncHeight.IsNullOrWhiteSpace() ? 0 : long.Parse(syncHeight);
+        var syncSetting = await GetSyncSettingAsync();
+        
+        syncSetting.TryGetValue(chainId, out var syncHeight);
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
-        var endHeight = Math.Min(startHeight + MaxRequestCount, currentIndexHeight);
-        var height = await HandleDataAsync(chainId, startHeight+1, endHeight);
-        await SettingManager.SetGlobalAsync(SyncType, height.ToString());
+        var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight);
+        var height = await HandleDataAsync(chainId, syncHeight+1, endHeight);
+        
+        syncSetting[chainId] = height;
+        await SetSyncSettingAsync(syncSetting);
     }
 
     protected async Task<T> QueryDataAsync<T>(GraphQLRequest request)
@@ -66,6 +74,19 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         });
 
         return data.SyncState.ConfirmedBlockHeight;
+    }
+
+    private async Task<Dictionary<string, long>> GetSyncSettingAsync()
+    {
+        var setting = await SettingManager.GetOrNullGlobalAsync(SyncType);
+        return setting == null
+            ? new Dictionary<string, long>()
+            : JsonSerializer.Deserialize<Dictionary<string, long>>(setting);
+    }
+
+    private async Task SetSyncSettingAsync(Dictionary<string,long> setting)
+    {
+        await SettingManager.SetGlobalAsync(SyncType, JsonSerializer.Serialize(setting));
     }
 
     protected abstract string SyncType { get; }
