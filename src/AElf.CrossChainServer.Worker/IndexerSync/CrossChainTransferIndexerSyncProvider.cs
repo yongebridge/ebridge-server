@@ -135,18 +135,28 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
         return new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!,$methodNames: [String],$skipCount:Int!,$maxResultCount:Int!){
-            caHolderTransactionInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight, methodNames:$methodNames,skipCount:$skipCount,maxResultCount:$maxResultCount}){
-                totalRecordCount,
+                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+            oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
                 data{
+                    id,
+                    chainId,
                     blockHash,
                     blockHeight,
-                    transactionId,
-                    methodName,
-                    transferInfo{
-                        fromChainId,
-                        toChainId
-                    }
+                    blockTime,
+                    crossChainType,
+                    transferType,
+                    fromChainId,
+                    toChainId,
+                    transferTokenSymbol,
+                    transferAmount,
+                    transferTime,
+                    transferTransactionId,
+                    fromAddress,
+                    toAddress,
+                    receiveTokenSymbol,
+                    receiveAmount,
+                    receiveTime,
+                    receiveTransactionId
                 }
             }
         }",

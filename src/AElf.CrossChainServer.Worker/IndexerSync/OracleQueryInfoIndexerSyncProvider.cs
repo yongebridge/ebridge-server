@@ -83,18 +83,19 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         return new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!,$methodNames: [String],$skipCount:Int!,$maxResultCount:Int!){
-            caHolderTransactionInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight, methodNames:$methodNames,skipCount:$skipCount,maxResultCount:$maxResultCount}){
-                totalRecordCount,
+                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+            oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
                 data{
+                    id,
+                    chainId,
                     blockHash,
                     blockHeight,
-                    transactionId,
-                    methodName,
-                    transferInfo{
-                        fromChainId,
-                        toChainId
-                    }
+                    blockTime,
+                    queryId,
+                    receiptHash,
+                    startIndex,
+                    endIndex,
+                    step
                 }
             }
         }",
@@ -120,5 +121,4 @@ public class OracleQueryInfoDto : GraphQLDto
     public long StartIndex { get; set; }
     public long EndIndex { get; set; }
     public OracleStep Step { get; set; }
-    public DateTime BlockTime { get; set; }
 }

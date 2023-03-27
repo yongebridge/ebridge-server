@@ -11,6 +11,9 @@ using Volo.Abp.Modularity;
 using Microsoft.Extensions.Configuration;
 using AElf.CrossChainServer.EntityHandler.Core;
 using AElf.CrossChainServer.Worker;
+using GraphQL.Client.Abstractions;
+using GraphQL.Client.Http;
+using GraphQL.Client.Serializer.Newtonsoft;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Aliyun;
 
@@ -35,6 +38,7 @@ namespace AElf.CrossChainServer.EntityHandler
             ConfigureCache(configuration);
             ConfigureRedis(context, configuration);
             ConfigureBlob(configuration);
+            ConfigureGraphQl(context, configuration);
             context.Services.AddHostedService<CrossChainServerHostedService>();
         }
         
@@ -68,6 +72,14 @@ namespace AElf.CrossChainServer.EntityHandler
             context.Services
                 .AddDataProtection()
                 .PersistKeysToStackExchangeRedis(redis, "CrossChainServer-Protection-Keys");
+        }
+        
+        private void ConfigureGraphQl(ServiceConfigurationContext context,
+            IConfiguration configuration)
+        {
+            context.Services.AddSingleton(new GraphQLHttpClient(configuration["GraphQL:Configuration"],
+                new NewtonsoftJsonSerializer()));
+            context.Services.AddScoped<IGraphQLClient>(sp => sp.GetRequiredService<GraphQLHttpClient>());
         }
     }
 }
