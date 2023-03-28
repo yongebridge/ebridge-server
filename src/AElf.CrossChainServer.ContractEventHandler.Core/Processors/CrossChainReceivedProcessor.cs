@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using AElf.AElfNode.EventHandler.BackgroundJob;
 using AElf.AElfNode.EventHandler.BackgroundJob.Processors;
-using AElf.Contracts.CrossChain;
 using AElf.Contracts.MultiToken;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;

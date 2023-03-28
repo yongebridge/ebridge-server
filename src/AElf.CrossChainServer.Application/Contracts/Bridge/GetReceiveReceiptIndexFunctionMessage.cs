@@ -3,7 +3,7 @@ using System.Numerics;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 [Function("getReceiveReceiptIndex", "tuple[]")]
 public class GetReceiveReceiptIndexFunctionMessage: FunctionMessage
@@ -16,7 +16,7 @@ public class GetReceiveReceiptIndexFunctionMessage: FunctionMessage
 }
 
 [FunctionOutput]
-public class GetReceiveReceiptIndexDTO: IFunctionOutputDTO
+public class GetReceiveReceiptIndexDto: IFunctionOutputDTO
 {
     [Parameter("uint256[]", "indexes", 1)]
     public List<BigInteger> Indexes { get; set; }

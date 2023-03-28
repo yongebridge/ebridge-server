@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using AElf.AElfNode.EventHandler.TestBase;
 using AElf.Contracts.Bridge;
-using AElf.Contracts.MultiToken;
 using AElf.CrossChainServer.CrossChain;
 using AElf.CrossChainServer.Tokens;
 using AElf.Types;

@@ -5,24 +5,20 @@ using System.Numerics;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Tokens;
-using AElf.Types;
 using Nethereum.Util;
 using Nethereum.Web3;
-using Serilog;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvider
 {
     private readonly ITokenAppService _tokenAppService;
-    private readonly IChainAppService _chainAppService;
 
     public EvmBridgeContractProvider(IBlockchainClientFactory<Web3> blockchainClientFactory,
-        ITokenAppService tokenAppService, IChainAppService chainAppService) : base(
+        ITokenAppService tokenAppService) : base(
         blockchainClientFactory)
     {
         _tokenAppService = tokenAppService;
-        _chainAppService = chainAppService;
     }
 
     public async Task<List<ReceiptInfoDto>> GetSendReceiptInfosAsync(string chainId, string contractAddress, string targetChainId, Guid tokenId,
@@ -33,7 +29,7 @@ public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvid
         var contractHandler = web3.Eth.GetContractHandler(contractAddress);
 
         var evmGetReceiptInfos = await contractHandler
-            .QueryDeserializingToObjectAsync<GetReceiptInfosFunctionMessage, GetReceiptInfosDTO>(
+            .QueryDeserializingToObjectAsync<GetReceiptInfosFunctionMessage, GetReceiptInfosDto>(
                 new GetReceiptInfosFunctionMessage
                 {
                     Token = token.Address,
@@ -69,7 +65,7 @@ public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvid
         var contractHandler = web3.Eth.GetContractHandler(contractAddress);
         
         var evmGetReceiptInfos = await contractHandler
-            .QueryDeserializingToObjectAsync<GetReceivedReceiptInfosFunctionMessage, GetReceivedReceiptInfosDTO>(
+            .QueryDeserializingToObjectAsync<GetReceivedReceiptInfosFunctionMessage, GetReceivedReceiptInfosDto>(
                 new GetReceivedReceiptInfosFunctionMessage
                 {
                     Token = token.Address,
@@ -111,7 +107,7 @@ public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvid
         var contractHandler = web3.Eth.GetContractHandler(contractAddress);
 
         var indexes = await contractHandler
-            .QueryDeserializingToObjectAsync<GetSendReceiptIndexFunctionMessage, GetSendReceiptIndexDTO>(
+            .QueryDeserializingToObjectAsync<GetSendReceiptIndexFunctionMessage, GetSendReceiptIndexDto>(
                 new GetSendReceiptIndexFunctionMessage
                 {
                     Tokens = tokenAddress,
@@ -139,7 +135,7 @@ public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvid
         var contractHandler = web3.Eth.GetContractHandler(contractAddress);
 
         var indexes = await contractHandler
-            .QueryDeserializingToObjectAsync<GetReceiveReceiptIndexFunctionMessage, GetReceiveReceiptIndexDTO>(
+            .QueryDeserializingToObjectAsync<GetReceiveReceiptIndexFunctionMessage, GetReceiveReceiptIndexDto>(
                 new GetReceiveReceiptIndexFunctionMessage
                 {
                     Tokens = tokenAddress,
@@ -159,7 +155,7 @@ public class EvmBridgeContractProvider : EvmClientProvider,IBridgeContractProvid
         var web3 = BlockchainClientFactory.GetClient(chainId);
         var contractHandler = web3.Eth.GetContractHandler(contractAddress);
         var isTransmit = await contractHandler
-            .QueryDeserializingToObjectAsync<IsReceiptRecordedFunctionMessage, IsReceiptRecordedDTO>(
+            .QueryDeserializingToObjectAsync<IsReceiptRecordedFunctionMessage, IsReceiptRecordedDto>(
                 new IsReceiptRecordedFunctionMessage
                 {
                     ReceiptHash = ByteArrayHelper.HexStringToByteArray(receiptHash)

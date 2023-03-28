@@ -1,5 +1,4 @@
 using Nest;
-using Volo.Abp.Domain.Entities;
 
 namespace AElf.CrossChainServer.Entities
 {

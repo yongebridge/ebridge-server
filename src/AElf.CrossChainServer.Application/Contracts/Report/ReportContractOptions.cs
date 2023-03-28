@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Report;
 
 public class ReportContractOptions
 {

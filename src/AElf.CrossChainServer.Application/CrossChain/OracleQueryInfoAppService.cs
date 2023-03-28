@@ -4,9 +4,7 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
-using Serilog;
 using Volo.Abp;
-using Volo.Abp.Domain.Repositories;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -44,7 +42,8 @@ public class OracleQueryInfoAppService : CrossChainServerAppService, IOracleQuer
             if (info.Step >= input.Step)
             {
                 Logger.LogDebug(
-                    $"Invalid step. ChainId: {info.ChainId}, QueryId: {info.QueryId}, Step: {info.Step}, Input Step: {input.Step}");
+                    "Invalid oracle step. ChainId: {chainId}, QueryId: {queryId}, Step: {step}, Input Step: {inputStep}",
+                    info.ChainId, info.QueryId, info.Step, input.Step);
                 continue;
             }
             

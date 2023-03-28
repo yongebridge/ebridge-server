@@ -1,5 +1,4 @@
 using System;
-using Nethereum.Model;
 
 namespace AElf.CrossChainServer.CrossChain;
 

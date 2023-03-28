@@ -3,7 +3,7 @@ using System.Numerics;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 [Function("getReceivedReceiptInfos", "tuple[]")]
 public class GetReceivedReceiptInfosFunctionMessage: FunctionMessage
@@ -22,14 +22,14 @@ public class GetReceivedReceiptInfosFunctionMessage: FunctionMessage
 }
 
 [FunctionOutput]
-public class GetReceivedReceiptInfosDTO: IFunctionOutputDTO
+public class GetReceivedReceiptInfosDto: IFunctionOutputDTO
 {
     [Parameter("tuple[]", "_receipts", 1)]
-    public List<ReceivedReceiptDTO> Receipts { get; set; }
+    public List<ReceivedReceiptDto> Receipts { get; set; }
 }
 
 [FunctionOutput]
-public class ReceivedReceiptDTO : IFunctionOutputDTO
+public class ReceivedReceiptDto : IFunctionOutputDTO
 {
     [Parameter("address", "asset", 1)]
     public string Asset { get; set; }

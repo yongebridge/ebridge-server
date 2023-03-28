@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace AElf.CrossChainServer.Contracts
+namespace AElf.CrossChainServer.Contracts.Bridge
 {
     public interface IBridgeContractProviderFactory
     {

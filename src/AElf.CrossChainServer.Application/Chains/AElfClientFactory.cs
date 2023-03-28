@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using AElf.Client.Service;
 using Microsoft.Extensions.Options;
-using Volo.Abp.DependencyInjection;
 
 namespace AElf.CrossChainServer.Chains
 {

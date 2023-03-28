@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using AElf.CrossChainServer.Chains;
 using AElf.Indexing.Elasticsearch;
-using AElf.Indexing.Elasticsearch.Translator;
-using Nest;
 using Shouldly;
 using Xunit;
 

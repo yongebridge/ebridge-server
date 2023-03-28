@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
-using AutoMapper.Internal.Mappers;
 using Shouldly;
 using Xunit;
 

@@ -1,12 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
-using Type = System.Type;
 
 namespace AElf.CrossChainServer.Tokens
 {
@@ -40,7 +38,8 @@ namespace AElf.CrossChainServer.Tokens
                 if (tokenDto == null)
                 {
                     Logger.LogWarning(
-                        $"Cannot get token! chain: {input.ChainId}, address: {input.Address ?? string.Empty}, symbol: {input.Symbol ?? string.Empty}.");
+                        "Cannot get token! chain: {chainId}, address: {address}, symbol: {symbol}.", input.ChainId,
+                        input.Address ?? string.Empty, input.Symbol ?? string.Empty);
                     throw new EntityNotFoundException("Token not exist.");
                 }
 

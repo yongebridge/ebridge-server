@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
-using AElf.CrossChainServer.Tokens;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 public interface IBridgeContractProvider
 {

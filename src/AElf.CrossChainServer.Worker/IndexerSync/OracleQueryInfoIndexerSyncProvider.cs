@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
 using AElf.CrossChainServer.Settings;
-using AElf.CrossChainServer.Tokens;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Volo.Abp.Json;

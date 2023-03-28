@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Modularity;
-using Volo.Abp.Threading;
 
 namespace AElf.CrossChainServer.Worker
 {

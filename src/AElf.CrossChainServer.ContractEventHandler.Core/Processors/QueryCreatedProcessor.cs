@@ -5,7 +5,6 @@ using AElf.AElfNode.EventHandler.BackgroundJob.Processors;
 using AElf.Contracts.Oracle;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
-using Microsoft.VisualBasic;
 
 namespace AElf.CrossChainServer.ContractEventHandler.Processors;
 

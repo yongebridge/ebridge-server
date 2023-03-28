@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using AElf.CrossChainServer.Localization;
+﻿using AElf.CrossChainServer.Localization;
 using Volo.Abp.Application.Services;
 
 namespace AElf.CrossChainServer;

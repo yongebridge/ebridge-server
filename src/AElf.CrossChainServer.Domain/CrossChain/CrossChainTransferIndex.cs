@@ -1,7 +1,5 @@
-using System;
 using AElf.CrossChainServer.Tokens;
 using AElf.Indexing.Elasticsearch;
-using Volo.Abp.Domain.Entities;
 
 namespace AElf.CrossChainServer.CrossChain;
 

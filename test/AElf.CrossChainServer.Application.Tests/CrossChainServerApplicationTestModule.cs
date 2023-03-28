@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using AElf.CrossChainServer.Chains;
-using AElf.CrossChainServer.Contracts;
+using AElf.CrossChainServer.Contracts.Bridge;
 using AElf.CrossChainServer.CrossChain;
 using AElf.CrossChainServer.EntityHandler.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using NSubstitute.Extensions;
-using Shouldly;
 using Volo.Abp.Modularity;
 
 namespace AElf.CrossChainServer;

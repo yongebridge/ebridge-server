@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using Volo.Abp.DependencyInjection;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 public class BridgeContractProviderFactory : IBridgeContractProviderFactory, ITransientDependency
 {

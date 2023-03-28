@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Token;
 
-public class CrossChainContractOptions
+public class TokenContractOptions
 {
     public Dictionary<string,string> ContractAddresses { get; set; }
 }

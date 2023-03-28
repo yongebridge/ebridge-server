@@ -5,12 +5,14 @@ using AElf.Contracts.MultiToken;
 using AElf.CrossChainServer.Chains;
 using AElf.Types;
 using Google.Protobuf;
+using Microsoft.Extensions.Options;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Token;
 
 public class AElfTokenContractProvider : AElfClientProvider, ITokenContractProvider
 {
-    public AElfTokenContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory) : base(blockchainClientFactory)
+    public AElfTokenContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+        IOptionsSnapshot<AccountOptions> accountOptions) : base(blockchainClientFactory, accountOptions)
     {
     }
 

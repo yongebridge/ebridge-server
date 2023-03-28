@@ -7,12 +7,14 @@ using AElf.Contracts.Bridge;
 using AElf.CrossChainServer.Chains;
 using AElf.Types;
 using Google.Protobuf;
+using Microsoft.Extensions.Options;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 public class AElfBridgeContractProvider: AElfClientProvider, IBridgeContractProvider
 {
-    public AElfBridgeContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory) : base(blockchainClientFactory)
+    public AElfBridgeContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+        IOptionsSnapshot<AccountOptions> accountOptions) : base(blockchainClientFactory, accountOptions)
     {
     }
 
@@ -55,9 +57,9 @@ public class AElfBridgeContractProvider: AElfClientProvider, IBridgeContractProv
         };
 
         var transaction =
-            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(PrivateKey), contractAddress,
+            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(GetPrivateKey(chainId)), contractAddress,
                 "GetSwapIdByToken", param);
-        var txWithSign = client.SignTransaction(PrivateKey, transaction);
+        var txWithSign = client.SignTransaction(GetPrivateKey(chainId), transaction);
         var transactionResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
         {
             RawTransaction = txWithSign.ToByteArray().ToHex()
@@ -99,9 +101,9 @@ public class AElfBridgeContractProvider: AElfClientProvider, IBridgeContractProv
             Symbol = symbol
         };
         var transaction =
-            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(PrivateKey), contractAddress,
+            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(GetPrivateKey(chainId)), contractAddress,
                 "IsTransferCanReceive", param);
-        var txWithSign = client.SignTransaction(PrivateKey, transaction);
+        var txWithSign = client.SignTransaction(GetPrivateKey(chainId), transaction);
         var transactionResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
         {
             RawTransaction = txWithSign.ToByteArray().ToHex()

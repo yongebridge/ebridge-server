@@ -1,13 +1,10 @@
 using System;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AElf.Client.Dto;
 using AElf.Client.Service;
-using AElf.Contracts.MultiToken;
 using AElf.CrossChainServer.Tokens;
 using AElf.Types;
 using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Options;
 using GetTokenInfoInput = AElf.Client.MultiToken.GetTokenInfoInput;
 
@@ -16,11 +13,13 @@ namespace AElf.CrossChainServer.Chains
     public class AElfClientProvider : IBlockchainClientProvider
     {
         protected readonly IBlockchainClientFactory<AElfClient> BlockchainClientFactory;
-        protected const string PrivateKey = "09da44778f8db2e602fb484334f37df19e221c84c4582ce5b7770ccfbc3ddbef";
+        private readonly AccountOptions _accountOptions;
 
-        public AElfClientProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory)
+        public AElfClientProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+            IOptionsSnapshot<AccountOptions> accountOptions)
         {
             BlockchainClientFactory = blockchainClientFactory;
+            _accountOptions = accountOptions.Value;
         }
 
         public BlockchainType ChainType { get; } = BlockchainType.AElf;
@@ -115,10 +114,10 @@ namespace AElf.CrossChainServer.Chains
                 Symbol = symbol
             };
             var transactionGetToken =
-                await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(PrivateKey), address,
+                await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(GetPrivateKey(chainId)), address,
                     "GetTokenInfo",
                     paramGetBalance);
-            var txWithSignGetToken = client.SignTransaction(PrivateKey, transactionGetToken);
+            var txWithSignGetToken = client.SignTransaction(GetPrivateKey(chainId), transactionGetToken);
             var transactionGetTokenResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
             {
                 RawTransaction = txWithSignGetToken.ToByteArray().ToHex()
@@ -139,6 +138,11 @@ namespace AElf.CrossChainServer.Chains
         {
             var client = BlockchainClientFactory.GetClient(chainId);
             return await client.GetMerklePathByTransactionIdAsync(txId);
+        }
+        
+        protected string GetPrivateKey(string chainId)
+        {
+            return _accountOptions.PrivateKeys[chainId];
         }
     }
 }

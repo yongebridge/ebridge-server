@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AElf.CrossChainServer.CrossChain;
 using AElf.Indexing.Elasticsearch;
 using Nest;
 using Volo.Abp;

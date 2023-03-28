@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using AElf.Client.Dto;
 using AElf.CrossChainServer.Tokens;
-using Microsoft.Extensions.Options;
 using Volo.Abp;
 
 namespace AElf.CrossChainServer.Chains

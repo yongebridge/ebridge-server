@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Tokens;
 using Shouldly;
 using Xunit;

@@ -63,7 +63,7 @@ public class BridgeContractSyncService : IBridgeContractSyncService, ITransientD
             }
             catch (Exception e)
             {
-                Logger.LogError($"Bridge contract sync failed, ChainId: {key}, Message: {e.Message}", e);
+                Logger.LogError(e,"Bridge contract sync failed, ChainId: {key}, Message: {message}", key, e.Message);
             }
         }
     }

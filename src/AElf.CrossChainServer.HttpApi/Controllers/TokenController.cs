@@ -1,9 +1,7 @@
 using System.Threading.Tasks;
-using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Tokens;
 using Microsoft.AspNetCore.Mvc;
 using Volo.Abp;
-using Volo.Abp.Application.Dtos;
 
 namespace AElf.CrossChainServer.Controllers
 {

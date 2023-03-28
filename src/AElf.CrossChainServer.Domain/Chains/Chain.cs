@@ -1,7 +1,6 @@
 using AElf.CrossChainServer.Entities;
 using JetBrains.Annotations;
 using Nest;
-using Volo.Abp.Domain.Entities;
 
 namespace AElf.CrossChainServer.Chains
 {

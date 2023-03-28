@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 using AElf.Types;
 using Microsoft.Extensions.Options;
-using Nest;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Token;
 
 public class TokenContractAppService: CrossChainServerAppService,ITokenContractAppService
 {

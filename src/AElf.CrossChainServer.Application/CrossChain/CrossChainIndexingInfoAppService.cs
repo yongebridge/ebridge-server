@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.Indexing.Elasticsearch;
-using AElf.Indexing.Elasticsearch.Translator;
 using Nest;
 using Volo.Abp;
 
@@ -17,7 +15,7 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
     private readonly ICrossChainIndexingInfoRepository _crossChainIndexingInfoRepository;
     private readonly INESTRepository<CrossChainIndexingInfoIndex, Guid> _crossChainIndexingInfoIndexRepository;
     private readonly IBlockchainAppService _blockchainAppService;
-
+    
     public CrossChainIndexingInfoAppService(ICrossChainIndexingInfoRepository crossChainIndexingInfoRepository,
         IChainAppService chainAppService,
         INESTRepository<CrossChainIndexingInfoIndex, Guid> crossChainIndexingInfoIndexRepository,
@@ -92,15 +90,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
             return 50 + await CalculateAElfProgressAsync(mainChain, fromChain, mainChainIndex.BlockHeight,
                 mainChainIndex.BlockTime) / 2;
         }
-        else
-        {
-            var sideChainIndexProgress = await CalculateAElfProgressAsync(mainChain, fromChain,
-                mainChainIndex.BlockHeight, mainChainIndex.BlockTime);
-            return 50 + (sideChainIndexProgress == 100
-                ? await CalculateAElfProgressAsync(mainChain, toChain, mainChainIndex.BlockHeight,
-                    mainChainIndex.BlockTime) / 2
-                : 0);
-        }
+
+        var sideChainIndexProgress = await CalculateAElfProgressAsync(mainChain, fromChain,
+            mainChainIndex.BlockHeight, mainChainIndex.BlockTime);
+        return 50 + (sideChainIndexProgress == 100
+            ? await CalculateAElfProgressAsync(mainChain, toChain, mainChainIndex.BlockHeight,
+                mainChainIndex.BlockTime) / 2
+            : 0);
     }
 
     private async Task<double> CalculateAElfProgressAsync(ChainDto fromChain, ChainDto toChain, long txHeight,

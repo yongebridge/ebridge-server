@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using AElf.AElfNode.EventHandler.BackgroundJob;
 using AElf.AElfNode.EventHandler.BackgroundJob.Processors;
-using AElf.Contracts.Oracle;
 using AElf.Contracts.Report;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;

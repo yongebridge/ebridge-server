@@ -1,11 +1,13 @@
 using AElf.Client.Service;
 using AElf.AElfNode.EventHandler.Core;
 using AElf.CrossChainServer.Chains;
-using AElf.CrossChainServer.Contracts;
+using AElf.CrossChainServer.Contracts.Bridge;
+using AElf.CrossChainServer.Contracts.CrossChain;
+using AElf.CrossChainServer.Contracts.Report;
+using AElf.CrossChainServer.Contracts.Token;
 using AElf.CrossChainServer.CrossChain;
 using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.DependencyInjection;
-using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
@@ -14,8 +16,6 @@ using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.TenantManagement;
-using Volo.Abp.Threading;
-using IChainAppService = AElf.CrossChainServer.Chains.IChainAppService;
 
 namespace AElf.CrossChainServer;
 

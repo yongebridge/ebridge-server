@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Nest;
 using System.Linq;
-using AElf.Contracts.Report;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts;
 using Microsoft.Extensions.Logging;
@@ -53,7 +52,8 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         if (info == null || info.Step >= step)
         {
             Logger.LogDebug(
-                $"Invalid report step. ChainId: {info?.ChainId}, RoundId: {roundId}, Step: {info?.Step}, Input Step: {step}");
+                "Invalid report step. ChainId: {chainId}, RoundId: {roundId}, Step: {oldStep}, Input Step: {newStep}",
+                info?.ChainId, roundId, info?.Step, step);
             return;
         }
 
@@ -113,13 +113,8 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         }
 
         var toUpdateList = new List<ReportInfo>();
-        foreach (var info in list)
+        foreach (var info in list.Where(info => info.TransmitHeight == 0 || info.TransmitHeight < chainStatus[info.TargetChainId].ConfirmedBlockHeight))
         {
-            if (info.TransmitHeight != 0 && info.TransmitHeight >= chainStatus[info.TargetChainId].ConfirmedBlockHeight)
-            {
-                continue;
-            }
-            
             var isTransmit = await _bridgeContractAppService.CheckTransmitAsync(info.TargetChainId, info.ReceiptHash);
             if (isTransmit)
             {
@@ -161,7 +156,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
             }
 
             var txId = await SendQueryTransactionAsync(item);
-            Logger.LogInformation($"ReSend Query, Resending Report: {item.Id}, Query Tx Id: {txId}");
+            Logger.LogInformation("ReSend Query, Resending Report: {reportId}, Query Tx Id: {txId}", item.Id, txId);
 
             item.QueryTransactionId = txId;
             item.Step = ReportStep.Resending;

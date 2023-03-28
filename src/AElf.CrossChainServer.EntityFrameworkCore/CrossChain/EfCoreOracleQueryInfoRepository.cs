@@ -1,5 +1,4 @@
 using System;
-using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 

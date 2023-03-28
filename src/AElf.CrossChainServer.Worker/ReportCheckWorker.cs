@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AElf.CrossChainServer.Contracts;
 using AElf.CrossChainServer.CrossChain;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.BackgroundWorkers;

@@ -4,13 +4,14 @@ using AElf.Client.Service;
 using AElf.Contracts.Report;
 using AElf.CrossChainServer.Chains;
 using Google.Protobuf;
+using Microsoft.Extensions.Options;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Report;
 
 public class AElfReportContractProvider : AElfClientProvider, IReportContractProvider
 {
-    public AElfReportContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory) : base(
-        blockchainClientFactory)
+    public AElfReportContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+        IOptionsSnapshot<AccountOptions> accountOptions) : base(blockchainClientFactory, accountOptions)
     {
     }
 

@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.BridgeContract;
-using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Bridge;
 
 [RemoteService(IsEnabled = false)]
 public class BridgeContractAppService : CrossChainServerAppService, IBridgeContractAppService

@@ -1,5 +1,4 @@
-﻿using System;
-using AElf.AElfNode.EventHandler.EntityFrameworkCore;
+﻿using AElf.AElfNode.EventHandler.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;

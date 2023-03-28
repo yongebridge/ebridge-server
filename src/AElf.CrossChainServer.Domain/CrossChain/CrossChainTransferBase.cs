@@ -1,7 +1,6 @@
 using System;
 using AElf.CrossChainServer.Entities;
 using Nest;
-using Volo.Abp.Domain.Entities;
 
 namespace AElf.CrossChainServer.CrossChain;
 

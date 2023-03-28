@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.Types;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Token;
 
 public interface ITokenContractProvider
 {

@@ -1,11 +1,9 @@
 using System.Threading.Tasks;
 using AElf.AElfNode.EventHandler.BackgroundJob;
 using AElf.AElfNode.EventHandler.BackgroundJob.Processors;
-using AElf.Contracts.Oracle;
 using AElf.Contracts.Report;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
-using AElf.CrossChainServer.Tokens;
 
 namespace AElf.CrossChainServer.ContractEventHandler.Processors;
 
@@ -13,13 +11,11 @@ public class ReportProposedProcessor: AElfEventProcessorBase<ReportProposed>
 {
     private readonly IReportInfoAppService _reportInfoAppService;
     private readonly IChainAppService _chainAppService;
-    private readonly ITokenAppService _tokenAppService;
 
-    public ReportProposedProcessor(IReportInfoAppService reportInfoAppService, ITokenAppService tokenAppService,
+    public ReportProposedProcessor(IReportInfoAppService reportInfoAppService, 
         IChainAppService chainAppService)
     {
         _reportInfoAppService = reportInfoAppService;
-        _tokenAppService = tokenAppService;
         _chainAppService = chainAppService;
     }
 

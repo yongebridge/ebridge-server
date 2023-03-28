@@ -5,13 +5,14 @@ using AElf.CrossChainServer.Chains;
 using AElf.Standards.ACS7;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Options;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.CrossChain;
 
 public class AElfCrossChainContractProvider : AElfClientProvider, ICrossChainContractProvider
 {
-    public AElfCrossChainContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory) : base(
-        blockchainClientFactory)
+    public AElfCrossChainContractProvider(IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+        IOptionsSnapshot<AccountOptions> accountOptions) : base(blockchainClientFactory, accountOptions)
     {
     }
 
@@ -25,9 +26,9 @@ public class AElfCrossChainContractProvider : AElfClientProvider, ICrossChainCon
             Value = height
         };
         var transaction =
-            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(PrivateKey), contractAddress,
+            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(GetPrivateKey(chainId)), contractAddress,
                 "GetBoundParentChainHeightAndMerklePathByHeight", param);
-        var txWithSign = client.SignTransaction(PrivateKey, transaction);
+        var txWithSign = client.SignTransaction(GetPrivateKey(chainId), transaction);
         var transactionResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
         {
             RawTransaction = txWithSign.ToByteArray().ToHex()

@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
 
-namespace AElf.CrossChainServer.Contracts;
+namespace AElf.CrossChainServer.Contracts.Report;
 
 [RemoteService(IsEnabled = false)]
 public class ReportContractAppService : CrossChainServerAppService, IReportContractAppService

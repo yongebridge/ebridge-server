@@ -14,7 +14,6 @@ using Nest;
 using Nethereum.Util;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
-using AElf.Contracts.MultiToken;
 using Microsoft.Extensions.Logging;
 
 namespace AElf.CrossChainServer.CrossChain;
@@ -363,7 +362,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"Update receive transaction failed. Id: {transfer.Id}, Error: {ex.Message}");
+                    Logger.LogError("Update receive transaction failed. Id: {transferId}, Error: {message}",
+                        transfer.Id, ex.Message);
                 }
             }
 
@@ -409,11 +409,11 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                     var txId = await SendReceiveTransactionAsync(transfer);
                     transfer.ReceiveTransactionId = txId;
                     toUpdate.Add(transfer);
-                    Logger.LogDebug($"Send auto receive tx: {txId}, FromChain: {transfer.FromChainId}, ToChain: {transfer.ToChainId}, Id: {transfer.Id}");
+                    Logger.LogDebug("Send auto receive tx: {txId}, FromChain: {fromChainId}, ToChain: {toChainId}, Id: {transferId}", txId, transfer.FromChainId, transfer.ToChainId, transfer.Id);
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"Send auto receive tx failed. Id: {transfer.Id}, Error: {ex.Message}");
+                    Logger.LogError("Send auto receive tx failed. Id: {transferId}, Error: {message}", transfer.Id, ex.Message);
                 }
             }
 
@@ -448,7 +448,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                 catch (Exception ex)
                 {
                     Logger.LogDebug(
-                        $"Update the transfer transaction to be approved falied. ReceiptId: {transfer.ReceiptId}, Error: {ex.Message}");
+                        "Update the transfer transaction to be approved failed. ReceiptId: {receiptId}, Error: {message}", transfer.ReceiptId, ex.Message);
                 }
 
                 page++;

@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Dynamic.Core.Tokenizer;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.BridgeContract;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts;
-using Microsoft.Extensions.Options;
 using Volo.Abp.Uow;
 
 namespace AElf.CrossChainServer.Worker;
