@@ -34,6 +34,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
     private readonly ITokenContractAppService _tokenContractAppService;
     private readonly ICrossChainContractAppService _crossChainContractAppService;
     private readonly ITokenSymbolMappingProvider _tokenSymbolMappingProvider;
+    private readonly ICheckTransferProvider _checkTransferProvider;
 
     private const int PageCount = 1000;
 
@@ -44,7 +45,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         IReportInfoAppService reportInfoAppService, IBlockchainAppService blockchainAppService,
         IBridgeContractAppService bridgeContractAppService, ITokenContractAppService tokenContractAppService,
         ICrossChainContractAppService crossChainContractAppService,
-        ITokenSymbolMappingProvider tokenSymbolMappingProvider)
+        ITokenSymbolMappingProvider tokenSymbolMappingProvider, 
+        ICheckTransferProvider checkTransferProvider)
     {
         _crossChainTransferRepository = crossChainTransferRepository;
         _chainAppService = chainAppService;
@@ -58,6 +60,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         _tokenContractAppService = tokenContractAppService;
         _crossChainContractAppService = crossChainContractAppService;
         _tokenSymbolMappingProvider = tokenSymbolMappingProvider;
+        _checkTransferProvider = checkTransferProvider;
     }
 
     public async Task<PagedResultDto<CrossChainTransferIndexDto>> GetListAsync(GetCrossChainTransfersInput input)
@@ -285,7 +288,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                     transfer.Status = CrossChainStatus.Indexed;
                     if (transfer.Type == CrossChainType.Heterogeneous)
                     {
-                        transfer.TransferNeedToBeApproved = ! await CheckTransferCanReceive(transfer);
+                        var result = await _checkTransferProvider.CheckTransferAsync(transfer.ToChainId,transfer.TransferTokenId,transfer.TransferAmount);
+                        transfer.TransferNeedToBeApproved = !result;
                     }
                 }
 
@@ -297,16 +301,6 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
             page++;
             crossChainTransfers = await GetToUpdateProgressAsync(page);
         }
-    }
-
-    private async Task<bool> CheckTransferCanReceive(CrossChainTransfer transfer)
-    {
-        var transferToken = await _tokenRepository.GetAsync(transfer.TransferTokenId);
-        var symbol = _tokenSymbolMappingProvider.GetMappingSymbol(transfer.FromChainId, transfer.ToChainId,
-            transferToken.Symbol);
-        var amount = (new BigDecimal(transfer.TransferAmount)) * BigInteger.Pow(10, transferToken.Decimals); 
-        return
-             await _bridgeContractAppService.IsTransferCanReceiveAsync(transfer.ToChainId, symbol, amount.ToString());
     }
 
     private async Task<CrossChainType> GetCrossChainTypeAsync(string fromChainId, string toChainId)
@@ -438,7 +432,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
             {
                 try
                 {
-                    var result = await CheckTransferCanReceive(transfer);
+                    var result = await _checkTransferProvider.CheckTransferAsync(transfer.ToChainId,
+                        transfer.TransferTokenId, transfer.TransferAmount);
                     if (result)
                     {
                         transfer.TransferNeedToBeApproved = false;
