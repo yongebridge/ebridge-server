@@ -24,6 +24,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
     private readonly IEnumerable<ICrossChainTransferProvider> _crossChainTransferProviders;
 
     private const int PageCount = 1000;
+    private const double FullOfTheProgress = 100;
+    private const double DoubleTolerance = 1E-6;
 
     public CrossChainTransferAppService(ICrossChainTransferRepository crossChainTransferRepository,
         IChainAppService chainAppService, 
@@ -150,7 +152,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         }
 
         transfer.Status = CrossChainStatus.Received;
-        transfer.Progress = 100;
+        transfer.Progress = FullOfTheProgress;
         transfer.ProgressUpdateTime = input.ReceiveTime;
 
         if (isTransferExist)
@@ -218,14 +220,14 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                 var provider = GetCrossChainTransferProvider(transfer.Type);
                 var progress = await provider.CalculateCrossChainProgressAsync(transfer);
                 
-                if (progress == transfer.Progress)
+                if (Math.Abs(progress - transfer.Progress) < DoubleTolerance)
                 {
                     continue;
                 }
 
                 transfer.Progress = progress;
                 transfer.ProgressUpdateTime = now;
-                if (progress == 100)
+                if (Math.Abs(progress - FullOfTheProgress) < DoubleTolerance)
                 {
                     transfer.Status = CrossChainStatus.Indexed;
                     if (transfer.Type == CrossChainType.Heterogeneous)
@@ -318,7 +320,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
     {
         var q = await _crossChainTransferRepository.GetQueryableAsync();
         var crossChainTransfers = await AsyncExecuter.ToListAsync(q
-            .Where(o => o.Status == CrossChainStatus.Indexed && o.Progress == 100 && o.ReceiveTransactionId != null &&
+            .Where(o => o.Status == CrossChainStatus.Indexed && o.Progress == FullOfTheProgress && o.ReceiveTransactionId != null &&
                         !o.TransferNeedToBeApproved)
             .OrderBy(o => o.ProgressUpdateTime)
             .Skip(PageCount * page)
@@ -405,7 +407,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
     {
         var q = await _crossChainTransferRepository.GetQueryableAsync();
         var crossChainTransfers = await AsyncExecuter.ToListAsync(q
-            .Where(o => o.Status == CrossChainStatus.Indexed && o.Progress == 100 && o.ReceiveTransactionId != null &&
+            .Where(o => o.Status == CrossChainStatus.Indexed && o.Progress == FullOfTheProgress && o.ReceiveTransactionId != null &&
                         o.TransferNeedToBeApproved)
             .OrderBy(o => o.ProgressUpdateTime)
             .Skip(PageCount * page)

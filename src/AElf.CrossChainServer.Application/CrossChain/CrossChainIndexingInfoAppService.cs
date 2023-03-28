@@ -15,7 +15,10 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
     private readonly ICrossChainIndexingInfoRepository _crossChainIndexingInfoRepository;
     private readonly INESTRepository<CrossChainIndexingInfoIndex, Guid> _crossChainIndexingInfoIndexRepository;
     private readonly IBlockchainAppService _blockchainAppService;
-    
+    private const double HalfOfTheProgress = 50;
+    private const double FullOfTheProgress = 100;
+    private const double DoubleTolerance = 1E-6;
+
     public CrossChainIndexingInfoAppService(ICrossChainIndexingInfoRepository crossChainIndexingInfoRepository,
         IChainAppService chainAppService,
         INESTRepository<CrossChainIndexingInfoIndex, Guid> crossChainIndexingInfoIndexRepository,
@@ -87,13 +90,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
         }
         if (toChain.IsMainChain)
         {
-            return 50 + await CalculateAElfProgressAsync(mainChain, fromChain, mainChainIndex.BlockHeight,
+            return HalfOfTheProgress + await CalculateAElfProgressAsync(mainChain, fromChain, mainChainIndex.BlockHeight,
                 mainChainIndex.BlockTime) / 2;
         }
 
         var sideChainIndexProgress = await CalculateAElfProgressAsync(mainChain, fromChain,
             mainChainIndex.BlockHeight, mainChainIndex.BlockTime);
-        return 50 + (sideChainIndexProgress == 100
+        return HalfOfTheProgress + (Math.Abs(sideChainIndexProgress - FullOfTheProgress) < DoubleTolerance
             ? await CalculateAElfProgressAsync(mainChain, toChain, mainChainIndex.BlockHeight,
                 mainChainIndex.BlockTime) / 2
             : 0);
@@ -132,12 +135,12 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
 
         if (transferIndexed == null || currentIndexedHeight >= txHeight)
         {
-            return 100;
+            return FullOfTheProgress;
         }
 
         var transferIndexedHeight = transferIndexed.IndexBlockHeight;
 
-        return (double)(currentIndexedHeight - transferIndexedHeight) * 100 /
+        return (double)(currentIndexedHeight - transferIndexedHeight) * FullOfTheProgress /
                (txHeight - transferIndexedHeight);
     }
 }
