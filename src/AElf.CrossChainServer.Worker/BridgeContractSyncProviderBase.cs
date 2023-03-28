@@ -13,6 +13,8 @@ public abstract class BridgeContractSyncProviderBase : IBridgeContractSyncProvid
 {
     public IBridgeContractAppService BridgeContractAppService { get; set; }
     public IBlockchainAppService BlockchainAppService{ get; set; }
+    
+    private const int MaxRequestCount = 100;
 
     protected BridgeContractSyncProviderBase()
     {
@@ -44,8 +46,9 @@ public abstract class BridgeContractSyncProviderBase : IBridgeContractSyncProvid
         }
 
         var fromIndex = syncInfo == null ? 1 : syncInfo.SyncIndex + 1;
+        var endIndex = Math.Min(fromIndex + MaxRequestCount - 1, index.Index);
 
-        var result = await HandleReceiptAsync(chainId, index.TargetChainId, index.TokenId, fromIndex, index.Index);
+        var result = await HandleReceiptAsync(chainId, index.TargetChainId, index.TokenId, fromIndex, endIndex);
         if (result.Count == 0)
         {
             return;

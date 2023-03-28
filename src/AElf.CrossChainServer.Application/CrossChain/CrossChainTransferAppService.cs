@@ -1,17 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
-using AElf.CrossChainServer.Contracts;
 using AElf.CrossChainServer.Tokens;
 using AElf.Indexing.Elasticsearch;
-using AElf.Types;
-using Google.Protobuf;
 using Nest;
-using Nethereum.Util;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Microsoft.Extensions.Logging;
@@ -23,43 +17,29 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
 {
     private readonly ICrossChainTransferRepository _crossChainTransferRepository;
     private readonly IChainAppService _chainAppService;
-    private readonly ICrossChainIndexingInfoAppService _crossChainIndexingInfoAppService;
     private readonly INESTRepository<CrossChainTransferIndex, Guid> _crossChainTransferIndexRepository;
     private readonly ITokenRepository _tokenRepository;
-    private readonly IOracleQueryInfoAppService _oracleQueryInfoAppService;
-    private readonly IReportInfoAppService _reportInfoAppService;
     private readonly IBlockchainAppService _blockchainAppService;
-    private readonly IBridgeContractAppService _bridgeContractAppService;
-    private readonly ITokenContractAppService _tokenContractAppService;
-    private readonly ICrossChainContractAppService _crossChainContractAppService;
-    private readonly ITokenSymbolMappingProvider _tokenSymbolMappingProvider;
     private readonly ICheckTransferProvider _checkTransferProvider;
+    private readonly IEnumerable<ICrossChainTransferProvider> _crossChainTransferProviders;
 
     private const int PageCount = 1000;
 
     public CrossChainTransferAppService(ICrossChainTransferRepository crossChainTransferRepository,
-        IChainAppService chainAppService, ICrossChainIndexingInfoAppService crossChainIndexingInfoAppService,
+        IChainAppService chainAppService, 
         INESTRepository<CrossChainTransferIndex, Guid> crossChainTransferIndexRepository,
-        ITokenRepository tokenRepository, IOracleQueryInfoAppService oracleQueryInfoAppService,
-        IReportInfoAppService reportInfoAppService, IBlockchainAppService blockchainAppService,
-        IBridgeContractAppService bridgeContractAppService, ITokenContractAppService tokenContractAppService,
-        ICrossChainContractAppService crossChainContractAppService,
-        ITokenSymbolMappingProvider tokenSymbolMappingProvider, 
-        ICheckTransferProvider checkTransferProvider)
+        ITokenRepository tokenRepository, 
+        IBlockchainAppService blockchainAppService,
+        ICheckTransferProvider checkTransferProvider, 
+        IEnumerable<ICrossChainTransferProvider> crossChainTransferProviders)
     {
         _crossChainTransferRepository = crossChainTransferRepository;
         _chainAppService = chainAppService;
-        _crossChainIndexingInfoAppService = crossChainIndexingInfoAppService;
         _crossChainTransferIndexRepository = crossChainTransferIndexRepository;
         _tokenRepository = tokenRepository;
-        _oracleQueryInfoAppService = oracleQueryInfoAppService;
-        _reportInfoAppService = reportInfoAppService;
         _blockchainAppService = blockchainAppService;
-        _bridgeContractAppService = bridgeContractAppService;
-        _tokenContractAppService = tokenContractAppService;
-        _crossChainContractAppService = crossChainContractAppService;
-        _tokenSymbolMappingProvider = tokenSymbolMappingProvider;
         _checkTransferProvider = checkTransferProvider;
+        _crossChainTransferProviders = crossChainTransferProviders.ToList();
     }
 
     public async Task<PagedResultDto<CrossChainTransferIndexDto>> GetListAsync(GetCrossChainTransfersInput input)
@@ -187,24 +167,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         string transferTransactionId, string receiptId)
     {
         var crossChainType = await GetCrossChainTypeAsync(fromChainId, toChainId);
-        CrossChainTransfer transfer;
-        switch (crossChainType)
-        {
-            case CrossChainType.Homogeneous:
-                transfer = await _crossChainTransferRepository.FindAsync(o =>
-                    o.FromChainId == fromChainId && o.ToChainId == toChainId &&
-                    o.TransferTransactionId == transferTransactionId);
-                break;
-            case CrossChainType.Heterogeneous:
-                transfer = await _crossChainTransferRepository.FindAsync(o =>
-                    o.FromChainId == fromChainId && o.ToChainId == toChainId &&
-                    o.ReceiptId == receiptId);
-                break;
-            default:
-                throw new NotSupportedException();
-        }
-
-        return transfer;
+        return await GetCrossChainTransferProvider(crossChainType).FindTransferAsync(fromChainId, toChainId, transferTransactionId, receiptId);
     }
 
     public async Task AddIndexAsync(AddCrossChainTransferIndexInput input)
@@ -252,29 +215,9 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
             var toUpdate = new List<CrossChainTransfer>();
             foreach (var transfer in crossChainTransfers)
             {
-                var progress = 0d;
-                switch (transfer.Type)
-                {
-                    case CrossChainType.Homogeneous:
-                        progress = await _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync(
-                            transfer.FromChainId, transfer.ToChainId, transfer.TransferBlockHeight,
-                            transfer.TransferTime);
-                        break;
-                    case CrossChainType.Heterogeneous:
-                        var chain = await _chainAppService.GetAsync(transfer.ToChainId);
-                        if (chain.Type == BlockchainType.AElf)
-                        {
-                            progress =
-                                await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(transfer.ReceiptId);
-                        }
-                        else
-                        {
-                            progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(transfer.ReceiptId);
-                        }
-
-                        break;
-                }
-
+                var provider = GetCrossChainTransferProvider(transfer.Type);
+                var progress = await provider.CalculateCrossChainProgressAsync(transfer);
+                
                 if (progress == transfer.Progress)
                 {
                     continue;
@@ -400,7 +343,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                         continue;
                     }
 
-                    var txId = await SendReceiveTransactionAsync(transfer);
+                    var provider = GetCrossChainTransferProvider(transfer.Type);
+                    var txId = await provider.SendReceiveTransactionAsync(transfer);
                     transfer.ReceiveTransactionId = txId;
                     toUpdate.Add(transfer);
                     Logger.LogDebug("Send auto receive tx: {txId}, FromChain: {fromChainId}, ToChain: {toChainId}, Id: {transferId}", txId, transfer.FromChainId, transfer.ToChainId, transfer.Id);
@@ -468,84 +412,6 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
             .Take(PageCount));
         return crossChainTransfers;
     }
-    private async Task<string> SendReceiveTransactionAsync(CrossChainTransfer transfer)
-    {
-        string txId;
-        if (transfer.Type == CrossChainType.Homogeneous)
-        {
-            var txResult =
-                await _blockchainAppService.GetTransactionResultAsync(transfer.FromChainId,
-                    transfer.TransferTransactionId);
-            var parentHeight = txResult.BlockHeight;
-            
-            var paramsJson = JsonNode.Parse(txResult.Transaction.Params);
-            var param = new AElf.Contracts.MultiToken.CrossChainTransferInput
-            {
-                To = Address.FromBase58(paramsJson["to"].ToString()),
-                Amount = long.Parse(paramsJson["amount"].ToString()),
-                Memo = paramsJson["memo"].ToString(),
-                Symbol = paramsJson["symbol"].ToString(),
-                IssueChainId = int.Parse(paramsJson["issueChainId"].ToString()),
-                ToChainId = int.Parse(paramsJson["toChainId"].ToString())
-            };
-
-            var transaction = new Transaction
-            {
-                From = Address.FromBase58(txResult.Transaction.From),
-                To = Address.FromBase58(txResult.Transaction.To),
-                Params = param.ToByteString(),
-                Signature = ByteString.FromBase64(txResult.Transaction.Signature),
-                MethodName = txResult.Transaction.MethodName,
-                RefBlockNumber = txResult.Transaction.RefBlockNumber,
-                RefBlockPrefix = ByteString.FromBase64(txResult.Transaction.RefBlockPrefix)
-            };
-
-            var merklePath = await GetMerklePathAsync(transfer.FromChainId, transfer.TransferTransactionId);
-            if (transfer.FromChainId != CrossChainServerConsts.AElfMainChainId)
-            {
-                var merkleProofContext = await _crossChainContractAppService.GetBoundParentChainHeightAndMerklePathByHeightAsync(
-                    transfer.FromChainId, txResult.BlockHeight);
-                parentHeight = merkleProofContext.BoundParentChainHeight;
-                merklePath.MerklePathNodes.AddRange(merkleProofContext.MerklePathFromParentChain.MerklePathNodes);
-            }
-
-            
-            var fromChain = await _chainAppService.GetAsync(transfer.FromChainId);
-            txId = await _tokenContractAppService.CrossChainReceiveTokenAsync(transfer.ToChainId,
-                fromChain.AElfChainId, parentHeight, transaction.ToByteArray().ToHex(), merklePath);
-        }
-        else
-        {
-            var transferToken = await _tokenRepository.GetAsync(transfer.TransferTokenId);
-            var symbol =
-                _tokenSymbolMappingProvider.GetMappingSymbol(transfer.FromChainId, transfer.ToChainId,
-                    transferToken.Symbol);
-            var swapId = await _bridgeContractAppService.GetSwapIdByTokenAsync(transfer.ToChainId, transfer.FromChainId,
-                symbol);
-            var amount = (new BigDecimal(transfer.TransferAmount)) * BigInteger.Pow(10, transferToken.Decimals);
-            txId = await _bridgeContractAppService.SwapTokenAsync(transfer.ToChainId, swapId, transfer.ReceiptId,
-                amount.ToString(),
-                transfer.ToAddress);
-        }
-
-        return txId;
-    }
-
-    private async Task<MerklePath> GetMerklePathAsync(string chainId, string txId)
-    {
-        var merklePathDto = await _blockchainAppService.GetMerklePathAsync(chainId,txId);
-        var merklePath = new MerklePath();
-        foreach (var node in merklePathDto.MerklePathNodes)
-        {
-            merklePath.MerklePathNodes.Add(new MerklePathNode()
-            {
-                Hash = new Hash() { Value = AElf.Types.Hash.LoadFromHex(node.Hash).Value },
-                IsLeftChildNode = node.IsLeftChildNode
-            });
-        }
-
-        return merklePath;
-    }
 
     private async Task<List<CrossChainTransfer>> GetToReceivedAsync(int page)
     {
@@ -556,5 +422,10 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
             .Skip(PageCount * page)
             .Take(PageCount));
         return crossChainTransfers;
+    }
+
+    private ICrossChainTransferProvider GetCrossChainTransferProvider(CrossChainType crossChainType)
+    {
+        return _crossChainTransferProviders.First(o => o.CrossChainType == crossChainType);
     }
 }
