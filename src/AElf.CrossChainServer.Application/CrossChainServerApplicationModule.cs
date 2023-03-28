@@ -60,5 +60,7 @@ public class CrossChainServerApplicationModule : AbpModule
         context.Services.AddTransient<IReportContractProvider, AElfReportContractProvider>();
         context.Services.AddTransient<ICrossChainContractProvider, AElfCrossChainContractProvider>();
         context.Services.AddTransient<ITokenContractProvider, AElfTokenContractProvider>();
+        context.Services.AddTransient<ICheckTransferProvider, CheckTransferProvider>();
+
     }
 }

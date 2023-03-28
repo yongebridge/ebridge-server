@@ -22,7 +22,8 @@ public class CrossChainServerApplicationTestModule : AbpModule
 
         context.Services.AddTransient<IBlockchainClientProvider, MockAElfClientProvider>();
         context.Services.AddTransient<IBlockchainClientProvider, MockEvmClientProvider>();
-
+        context.Services.AddTransient<ICheckTransferProvider, MockCheckTransferProvider>();
+        
         Configure<ChainApiOptions>(o =>
         {
             o.ChainNodeApis = new Dictionary<string, string>
