@@ -66,7 +66,7 @@ public class OracleQueryInfoAppService : CrossChainServerAppService, IOracleQuer
         await _oracleQueryInfoIndexRepository.UpdateAsync(index);
     }
 
-    public async Task<double> CalculateCrossChainProgressAsync(string option)
+    public async Task<int> CalculateCrossChainProgressAsync(string option)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<OracleQueryInfoIndex>, QueryContainer>>
         {

@@ -7,8 +7,8 @@ public interface ICrossChainIndexingInfoAppService
 {
     Task CreateAsync(CreateCrossChainIndexingInfoInput input);
     Task CleanAsync(DateTime time);
-    Task<double> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height, DateTime txTime);
-    Task<double> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height);
+    Task<int> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height, DateTime txTime);
+    Task<int> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height);
     Task AddIndexAsync(AddCrossChainIndexingInfoIndexInput input);
     Task DeleteIndexAsync(Guid id);
 }

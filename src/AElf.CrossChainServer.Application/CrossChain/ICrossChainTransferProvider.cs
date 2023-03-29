@@ -8,6 +8,6 @@ public interface ICrossChainTransferProvider
 
     Task<CrossChainTransfer> FindTransferAsync(string fromChainId, string toChainId,
         string transferTransactionId, string receiptId);
-    Task<double> CalculateCrossChainProgressAsync(CrossChainTransfer transfer);
+    Task<int> CalculateCrossChainProgressAsync(CrossChainTransfer transfer);
     Task<string> SendReceiveTransactionAsync(CrossChainTransfer transfer);
 }

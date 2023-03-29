@@ -41,7 +41,7 @@ public class HeterogeneousCrossChainTransferProvider : ICrossChainTransferProvid
             o.FromChainId == fromChainId && o.ToChainId == toChainId && o.ReceiptId == receiptId);
     }
 
-    public async Task<double> CalculateCrossChainProgressAsync(CrossChainTransfer transfer)
+    public async Task<int> CalculateCrossChainProgressAsync(CrossChainTransfer transfer)
     {
         var chain = await _chainAppService.GetAsync(transfer.ToChainId);
         if (chain.Type == BlockchainType.AElf)

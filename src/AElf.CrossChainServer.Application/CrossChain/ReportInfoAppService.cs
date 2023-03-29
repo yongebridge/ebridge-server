@@ -74,7 +74,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         await _nestRepository.UpdateAsync(index);
     }
 
-    public async Task<double> CalculateCrossChainProgressAsync(string receiptId)
+    public async Task<int> CalculateCrossChainProgressAsync(string receiptId)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<ReportInfoIndex>, QueryContainer>>
         {
@@ -89,7 +89,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
             return 0;
         }
 
-        return ((int)info.Step + 1) * 100 / 3d;
+        return ((int)info.Step + 1) * 100 / 3;
     }
 
     public async Task UpdateStepAsync()

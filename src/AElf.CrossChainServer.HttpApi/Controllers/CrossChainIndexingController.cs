@@ -27,7 +27,7 @@ public class CrossChainIndexingController
     /// <returns></returns>
     [HttpGet]
     [Route("progress")]
-    public Task<double> CalculateProgressAsync(string fromChainId, string toChainId, long height)
+    public Task<int> CalculateProgressAsync(string fromChainId, string toChainId, long height)
     {
         return _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync(fromChainId, toChainId, height);
     }

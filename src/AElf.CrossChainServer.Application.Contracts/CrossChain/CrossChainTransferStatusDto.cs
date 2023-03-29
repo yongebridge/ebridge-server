@@ -5,5 +5,5 @@ namespace AElf.CrossChainServer.CrossChain;
 
 public class CrossChainTransferStatusDto : EntityDto<Guid>
 {
-    public double Progress { get; set; }
+    public int Progress { get; set; }
 }

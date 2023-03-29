@@ -55,7 +55,7 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         await _reportProposedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
         progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
-        progress.ShouldBe(100/3d);
+        progress.ShouldBe(100/3);
 
         var reportConfirmedEvent = new ReportConfirmed
         {
@@ -67,7 +67,7 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         await _reportConfirmedTestProcessor.HandleEventAsync(reportConfirmedEvent, contractEvent);
         
         progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
-        progress.ShouldBe(100/3d);
+        progress.ShouldBe(100/3);
         
         reportConfirmedEvent = new ReportConfirmed
         {
@@ -80,6 +80,6 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         await _reportConfirmedTestProcessor.HandleEventAsync(reportConfirmedEvent, contractEvent);
         
         progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
-        progress.ShouldBe(200/3d);
+        progress.ShouldBe(200/3);
     }
 }

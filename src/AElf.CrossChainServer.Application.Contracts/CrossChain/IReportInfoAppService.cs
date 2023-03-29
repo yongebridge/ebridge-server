@@ -11,7 +11,7 @@ public interface IReportInfoAppService
         DateTime updateTime);
     Task AddIndexAsync(AddReportInfoIndexInput input);
     Task UpdateIndexAsync(UpdateReportInfoIndexInput input);
-    Task<double> CalculateCrossChainProgressAsync(string receiptId);
+    Task<int> CalculateCrossChainProgressAsync(string receiptId);
     Task UpdateStepAsync();
     Task ReSendQueryAsync();
     Task CheckQueryTransactionAsync();
