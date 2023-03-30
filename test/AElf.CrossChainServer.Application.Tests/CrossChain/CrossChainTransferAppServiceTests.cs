@@ -397,14 +397,14 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         {
             MaxResultCount = 100
         });
-        list.Items[0].Progress.ShouldBe(100/3D);
+        list.Items[0].Progress.ShouldBe(100/3);
         
         status = await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
         {
             Ids = { list.Items[0].Id }
         });
         status.Items.Count.ShouldBe(1);
-        status.Items[0].Progress.ShouldBe(100/3D);
+        status.Items[0].Progress.ShouldBe(100/3);
         
         await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1,"Eth","Ethereum", ReportStep.Confirmed, 100);
         await Task.Delay(2000);
@@ -413,14 +413,14 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         {
             MaxResultCount = 100
         });
-        list.Items[0].Progress.ShouldBe(200/3D);
+        list.Items[0].Progress.ShouldBe(200/3);
         
         status = await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
         {
             Ids = { list.Items[0].Id }
         });
         status.Items.Count.ShouldBe(1);
-        status.Items[0].Progress.ShouldBe(200/3D);
+        status.Items[0].Progress.ShouldBe(200/3);
 
         await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1,"Eth", "Ethereum",ReportStep.Transmitted, 110);
         await Task.Delay(2000);

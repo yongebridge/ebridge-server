@@ -15,9 +15,6 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
     private readonly ICrossChainIndexingInfoRepository _crossChainIndexingInfoRepository;
     private readonly INESTRepository<CrossChainIndexingInfoIndex, Guid> _crossChainIndexingInfoIndexRepository;
     private readonly IBlockchainAppService _blockchainAppService;
-    private const double HalfOfTheProgress = 50;
-    private const double FullOfTheProgress = 100;
-    private const double DoubleTolerance = 1E-6;
 
     public CrossChainIndexingInfoAppService(ICrossChainIndexingInfoRepository crossChainIndexingInfoRepository,
         IChainAppService chainAppService,
@@ -52,13 +49,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
         await _crossChainIndexingInfoIndexRepository.DeleteAsync(id);
     }
 
-    public async Task<double> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height)
+    public async Task<int> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height)
     {
         var block = await _blockchainAppService.GetBlockByHeightAsync(fromChainId, height);
         return await CalculateCrossChainProgressAsync(fromChainId, toChainId, height, block.Header.Time);
     }
 
-    public async Task<double> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height,
+    public async Task<int> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height,
         DateTime txTime)
     {
         var fromChain = await _chainAppService.GetAsync(fromChainId);
@@ -90,19 +87,19 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
         }
         if (toChain.IsMainChain)
         {
-            return HalfOfTheProgress + await CalculateAElfProgressAsync(mainChain, fromChain, mainChainIndex.BlockHeight,
+            return CrossChainServerConsts.HalfOfTheProgress + await CalculateAElfProgressAsync(mainChain, fromChain, mainChainIndex.BlockHeight,
                 mainChainIndex.BlockTime) / 2;
         }
 
         var sideChainIndexProgress = await CalculateAElfProgressAsync(mainChain, fromChain,
             mainChainIndex.BlockHeight, mainChainIndex.BlockTime);
-        return HalfOfTheProgress + (Math.Abs(sideChainIndexProgress - FullOfTheProgress) < DoubleTolerance
+        return CrossChainServerConsts.HalfOfTheProgress + (sideChainIndexProgress == CrossChainServerConsts.FullOfTheProgress
             ? await CalculateAElfProgressAsync(mainChain, toChain, mainChainIndex.BlockHeight,
                 mainChainIndex.BlockTime) / 2
             : 0);
     }
 
-    private async Task<double> CalculateAElfProgressAsync(ChainDto fromChain, ChainDto toChain, long txHeight,
+    private async Task<int> CalculateAElfProgressAsync(ChainDto fromChain, ChainDto toChain, long txHeight,
         DateTime txTime)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<CrossChainIndexingInfoIndex>, QueryContainer>>
@@ -135,12 +132,12 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
 
         if (transferIndexed == null || currentIndexedHeight >= txHeight)
         {
-            return FullOfTheProgress;
+            return CrossChainServerConsts.FullOfTheProgress;
         }
 
         var transferIndexedHeight = transferIndexed.IndexBlockHeight;
 
-        return (double)(currentIndexedHeight - transferIndexedHeight) * FullOfTheProgress /
-               (txHeight - transferIndexedHeight);
+        return (int) ((currentIndexedHeight - transferIndexedHeight) * CrossChainServerConsts.FullOfTheProgress /
+                      (txHeight - transferIndexedHeight));
     }
 }

@@ -39,7 +39,7 @@ public class HomogeneousCrossChainTransferProvider : ICrossChainTransferProvider
             o.TransferTransactionId == transferTransactionId);
     }
 
-    public async Task<double> CalculateCrossChainProgressAsync(CrossChainTransfer transfer)
+    public async Task<int> CalculateCrossChainProgressAsync(CrossChainTransfer transfer)
     {
         return await _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync(
             transfer.FromChainId, transfer.ToChainId, transfer.TransferBlockHeight,

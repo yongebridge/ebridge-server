@@ -28,7 +28,7 @@ public class CrossChainTransferIndexDto: EntityDto<Guid>
     /// </summary>
     public CrossChainStatus Status { get; set; }
     public string ReceiptId { get; set; }
-    public double Progress { get; set; }
+    public int Progress { get; set; }
     public long ProgressUpdateTime { get; set; }
 
     public bool TransferNeedToBeApproved { get; set; }
