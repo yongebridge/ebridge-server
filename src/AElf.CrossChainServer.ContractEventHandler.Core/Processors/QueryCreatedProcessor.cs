@@ -39,7 +39,7 @@ public class QueryCreatedProcessor: AElfEventProcessorBase<QueryCreated>
                 Step = OracleStep.QueryCreated,
                 ChainId = chain.Id,
                 QueryId = eventDetailsEto.QueryId.ToHex(),
-                UpdateTime = txInfoDto.BlockTime
+                LastUpdateHeight = txInfoDto.BlockNumber
             });
         }
     }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.CrossChainServer.Chains;
+using AElf.CrossChainServer.Indexer;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -17,17 +19,21 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
     protected readonly IGraphQLClient GraphQlClient;
     protected readonly ISettingManager SettingManager;
     protected readonly IJsonSerializer JsonSerializer;
+    protected readonly IIndexerAppService IndexerAppService;
+    protected readonly IChainAppService ChainAppService;
 
     public ILogger<IndexerSyncProviderBase> Logger { get; set; }
 
     private const int MaxRequestCount = 1000;
 
     protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, ISettingManager settingManager,
-        IJsonSerializer jsonSerializer)
+        IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService, IChainAppService chainAppService)
     {
         GraphQlClient = graphQlClient;
         SettingManager = settingManager;
         JsonSerializer = jsonSerializer;
+        IndexerAppService = indexerAppService;
+        ChainAppService = chainAppService;
         Logger = NullLogger<IndexerSyncProviderBase>.Instance;
     }
 
@@ -38,7 +44,8 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         syncSetting.TryGetValue(chainId, out var syncHeight);
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
         var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight);
-        var height = await HandleDataAsync(chainId, syncHeight+1, endHeight);
+        var chain = await ChainAppService.GetAsync(chainId);
+        var height = await HandleDataAsync(ChainHelper.ConvertChainIdToBase58(chain.AElfChainId), syncHeight+1, endHeight);
         
         syncSetting[chainId] = height;
         await SetSyncSettingAsync(syncSetting);
@@ -59,21 +66,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     private async Task<long> GetIndexBlockHeightAsync(string chainId)
     {
-        var data = await QueryDataAsync<ConfirmedBlockHeight>(new GraphQLRequest
-        {
-            Query = @"
-			    query($chainId:String,$filterType:BlockFilterType!) {
-                    syncState(dto: {chainId:$chainId,filterType:$filterType}){
-                        confirmedBlockHeight}
-                    }",
-            Variables = new
-            {
-                chainId,
-                filterType = BlockFilterType.LOG_EVENT
-            }
-        });
-
-        return data.SyncState.ConfirmedBlockHeight;
+        return await IndexerAppService.GetLatestIndexHeightAsync(chainId);
     }
 
     private async Task<Dictionary<string, long>> GetSyncSettingAsync()
@@ -91,22 +84,6 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     protected abstract string SyncType { get; }
 
-    protected abstract Task<long> HandleDataAsync(string chainId, long startHeight, long endHeight);
+    protected abstract Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight);
 }
 
-public class ConfirmedBlockHeight
-{
-    public SyncState SyncState { get; set; }
-}
-
-public class SyncState
-{
-    public long ConfirmedBlockHeight { get; set; }
-}
-
-public enum BlockFilterType
-{
-    BLOCK,
-    TRANSACTION,
-    LOG_EVENT
-}

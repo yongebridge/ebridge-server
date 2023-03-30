@@ -26,7 +26,7 @@ public class CommittedProcessor : AElfEventProcessorBase<Committed>
             Step = OracleStep.Committed,
             ChainId = chain.Id,
             QueryId = eventDetailsEto.QueryId.ToHex(),
-            UpdateTime = txInfoDto.BlockTime
+            LastUpdateHeight = txInfoDto.BlockNumber
         });
     }
 }

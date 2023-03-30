@@ -9,5 +9,5 @@ public class AddOracleQueryInfoIndexInput
     public string QueryId { get; set; }
     public string Option { get; set; }
     public OracleStep Step { get; set; }
-    public DateTime UpdateTime { get; set; }
+    public long LastUpdateHeight { get; set; }
 }

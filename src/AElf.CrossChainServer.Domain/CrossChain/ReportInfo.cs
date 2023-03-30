@@ -18,6 +18,6 @@ public class ReportInfo : MultiChainEntity<Guid>
     public ReportStep Step { get; set; }
     public int QueryTimes { get; set; }
     public long TransmitHeight { get; set; }
-    public DateTime UpdateTime { get; set; }
+    public long LastUpdateHeight { get; set; }
     public string QueryTransactionId { get; set; }
 }

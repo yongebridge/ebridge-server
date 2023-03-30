@@ -9,5 +9,5 @@ public static class CrossChainServerConsts
     public const string AElfMainChainId = "MainChain_AELF";
 
     public const int MaxReportQueryTimes = 10;
-    public const int ReportTimeout = 10; // 10 minutes
+    public const int ReportTimeoutHeightThreshold = 1200; 
 }

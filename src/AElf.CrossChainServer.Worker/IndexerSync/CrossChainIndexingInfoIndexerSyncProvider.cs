@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
+using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Settings;
 using GraphQL;
 using GraphQL.Client.Abstractions;
@@ -13,24 +14,22 @@ namespace AElf.CrossChainServer.Worker.IndexerSync;
 public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly ICrossChainIndexingInfoAppService _crossChainIndexingInfoAppService;
-    private readonly IChainAppService _chainAppService;
 
     public CrossChainIndexingInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
-        IChainAppService chainAppService,IJsonSerializer jsonSerializer,
+        IChainAppService chainAppService,IJsonSerializer jsonSerializer,IIndexerAppService indexerAppService,
         ICrossChainIndexingInfoAppService crossChainIndexingInfoAppService) : base(
-        graphQlClient, settingManager,jsonSerializer)
+        graphQlClient, settingManager,jsonSerializer,indexerAppService, chainAppService)
     {
-        _chainAppService = chainAppService;
         _crossChainIndexingInfoAppService = crossChainIndexingInfoAppService;
     }
 
     protected override string SyncType { get; } = CrossChainServerSettings.CrossChainIndexingIndexerSync;
 
-    protected override async Task<long> HandleDataAsync(string chainId, long startHeight, long endHeight)
+    protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
         var processedHeight = startHeight;
 
-        var data = await QueryDataAsync<CrossChainIndexingInfoResponse>(GetRequest(chainId, startHeight, endHeight));
+        var data = await QueryDataAsync<CrossChainIndexingInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.CrossChainIndexingInfoDto.Count == 0)
         {
             return processedHeight;
@@ -47,9 +46,9 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     private async Task HandleDataAsync(CrossChainIndexingInfoDto data)
     {
-        var chain = await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(data.ChainId));
+        var chain = await ChainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(data.ChainId));
         var indexChain =
-            await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(data.IndexChainId));
+            await ChainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(data.IndexChainId));
         if (indexChain == null)
         {
             return;

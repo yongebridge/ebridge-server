@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
+using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Settings;
 using GraphQL;
 using GraphQL.Client.Abstractions;
@@ -13,24 +14,22 @@ namespace AElf.CrossChainServer.Worker.IndexerSync;
 public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly IReportInfoAppService _reportInfoAppService;
-    private readonly IChainAppService _chainAppService;
 
     public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
-        IChainAppService chainAppService,IJsonSerializer jsonSerializer,
+        IChainAppService chainAppService,IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService,
         IReportInfoAppService reportInfoAppService) : base(
-        graphQlClient, settingManager,jsonSerializer)
+        graphQlClient, settingManager,jsonSerializer,indexerAppService,chainAppService)
     {
-        _chainAppService = chainAppService;
         _reportInfoAppService = reportInfoAppService;
     }
 
     protected override string SyncType { get; } = CrossChainServerSettings.ReportIndexerSync;
 
-    protected override async Task<long> HandleDataAsync(string chainId, long startHeight, long endHeight)
+    protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
         var processedHeight = startHeight;
 
-        var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(chainId, startHeight, endHeight));
+        var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.ReportInfo.Count == 0)
         {
             return processedHeight;
@@ -47,7 +46,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     private async Task HandleDataAsync(ReportInfoDto report)
     {
-        var chain = await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(report.ChainId));
+        var chain = await ChainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(report.ChainId));
 
         switch (report.Step)
         {
@@ -60,12 +59,12 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     RoundId = report.RoundId,
                     Token = report.Token,
                     TargetChainId = report.TargetChainId,
-                    UpdateTime = report.BlockTime
+                    LastUpdateHeight = report.BlockHeight
                 });
                 break;
             case ReportStep.Confirmed:
                 await _reportInfoAppService.UpdateStepAsync(chain.Id, report.RoundId, report.Token,
-                    report.TargetChainId, ReportStep.Confirmed, report.BlockTime);
+                    report.TargetChainId, ReportStep.Confirmed, report.BlockHeight);
                 break;
         }
     }

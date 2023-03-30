@@ -28,7 +28,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.QueryCreated,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         };
         await _oracleQueryInfoAppService.CreateAsync(createInput);
 
@@ -40,7 +40,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.Committed,
             ChainId = "MainChain_AELF",
             QueryId = "QueryIdNotExist",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
@@ -52,7 +52,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.Committed,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
@@ -64,7 +64,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.SufficientCommitmentsCollected,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
@@ -76,7 +76,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.Committed,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
@@ -93,7 +93,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.QueryCreated,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId1",
-            UpdateTime = DateTime.UtcNow.AddSeconds(-10)
+            LastUpdateHeight = 100
         };
         await _oracleQueryInfoAppService.CreateAsync(createInput1);
 
@@ -106,7 +106,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.QueryCreated,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId2",
-            UpdateTime = DateTime.UtcNow.AddSeconds(-5)
+            LastUpdateHeight = 150
         };
         await _oracleQueryInfoAppService.CreateAsync(createInput2);
 
@@ -118,7 +118,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
             Step = OracleStep.Committed,
             ChainId = "MainChain_AELF",
             QueryId = "QueryId2",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 200
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         

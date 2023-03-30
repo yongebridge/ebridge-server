@@ -31,10 +31,9 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
 
         foreach (var chain in chains.Items)
         {
-            var aelfChainId = ChainHelper.ConvertChainIdToBase58(chain.AElfChainId);
             foreach (var provider in _indexerSyncProviders)
             {
-                await provider.ExecuteAsync(aelfChainId);
+                await provider.ExecuteAsync(chain.Id);
             }
         }
     }

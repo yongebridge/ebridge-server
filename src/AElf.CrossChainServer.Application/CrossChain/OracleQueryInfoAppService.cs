@@ -48,7 +48,7 @@ public class OracleQueryInfoAppService : CrossChainServerAppService, IOracleQuer
             }
             
             info.Step = input.Step;
-            info.UpdateTime = input.UpdateTime;
+            info.LastUpdateHeight = input.LastUpdateHeight;
         }
         
         await _oracleQueryInfoRepository.UpdateManyAsync(infoList);

@@ -6,6 +6,7 @@ using Nest;
 using System.Linq;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts;
+using AElf.CrossChainServer.Indexer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
@@ -22,11 +23,13 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
     private readonly IEventHandlerAppService _eventHandlerAppService;
     private readonly IReportContractAppService _reportContractAppService;
     private readonly ReportJobCategoryOptions _reportJobCategoryOptions;
+    private readonly IIndexerAppService _indexerAppService;
 
     public ReportInfoAppService(IReportInfoRepository reportInfoRepository,
         INESTRepository<ReportInfoIndex, Guid> nestRepository, IBridgeContractAppService bridgeContractAppService,
         IBlockchainAppService blockchainAppService, IEventHandlerAppService eventHandlerAppService,
-        IReportContractAppService reportContractAppService, IOptionsSnapshot<ReportJobCategoryOptions> reportJobCategoryOptions)
+        IReportContractAppService reportContractAppService,
+        IOptionsSnapshot<ReportJobCategoryOptions> reportJobCategoryOptions, IIndexerAppService indexerAppService)
     {
         _reportInfoRepository = reportInfoRepository;
         _nestRepository = nestRepository;
@@ -34,6 +37,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         _blockchainAppService = blockchainAppService;
         _eventHandlerAppService = eventHandlerAppService;
         _reportContractAppService = reportContractAppService;
+        _indexerAppService = indexerAppService;
         _reportJobCategoryOptions = reportJobCategoryOptions.Value;
     }
 
@@ -44,7 +48,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         await _reportInfoRepository.InsertAsync(info);
     }
 
-    public async Task UpdateStepAsync(string chainId, long roundId, string token, string targetChainId, ReportStep step, DateTime updateTime)
+    public async Task UpdateStepAsync(string chainId, long roundId, string token, string targetChainId, ReportStep step, long blockHeight)
     {
         var info = await _reportInfoRepository.FindAsync(o =>
             o.ChainId == chainId && o.RoundId == roundId  && o.Token == token && o.TargetChainId == targetChainId);
@@ -58,7 +62,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         }
 
         info.Step = step;
-        info.UpdateTime = updateTime;
+        info.LastUpdateHeight = blockHeight;
         await _reportInfoRepository.UpdateAsync(info);
     }
 
@@ -149,8 +153,8 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         var toUpdateReports = new List<ReportInfo>();
         foreach (var item in list)
         {
-            var latestSyncTime = await _eventHandlerAppService.GetLatestSyncTimeAsync(item.ChainId, _reportJobCategoryOptions.Mapping[item.ChainId]);
-            if (item.UpdateTime > latestSyncTime.AddMinutes(-CrossChainServerConsts.ReportTimeout))
+            var latestIndexHeight = await _indexerAppService.GetLatestIndexHeightAsync(item.ChainId);
+            if (latestIndexHeight - item.LastUpdateHeight <= CrossChainServerConsts.ReportTimeoutHeightThreshold) 
             {
                 continue;
             }

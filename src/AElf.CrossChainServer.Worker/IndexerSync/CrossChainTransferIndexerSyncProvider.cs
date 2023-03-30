@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
+using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Settings;
 using AElf.CrossChainServer.Tokens;
 using GraphQL;
@@ -16,25 +17,24 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly ICrossChainTransferAppService _crossChainTransferAppService;
     private readonly ITokenAppService _tokenAppService;
-    private readonly IChainAppService _chainAppService;
 
     public CrossChainTransferIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
         ICrossChainTransferAppService crossChainTransferAppService, IChainAppService chainAppService,
-        ITokenAppService tokenAppService, IJsonSerializer jsonSerializer) : base(
-        graphQlClient, settingManager,jsonSerializer)
+        ITokenAppService tokenAppService, IJsonSerializer jsonSerializer,
+        IIndexerAppService indexerAppService) : base(
+        graphQlClient, settingManager,jsonSerializer,indexerAppService,chainAppService)
     {
         _crossChainTransferAppService = crossChainTransferAppService;
-        _chainAppService = chainAppService;
         _tokenAppService = tokenAppService;
     }
 
     protected override string SyncType { get; } = CrossChainServerSettings.CrossChainTransferIndexerSync;
 
-    protected override async Task<long> HandleDataAsync(string chainId, long startHeight, long endHeight)
+    protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
         var processedHeight = startHeight;
 
-        var data = await QueryDataAsync<CrossChainTransferInfoDto>(GetRequest(chainId, startHeight, endHeight));
+        var data = await QueryDataAsync<CrossChainTransferInfoDto>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.CrossChainTransferInfo.Count == 0)
         {
             return processedHeight;
@@ -51,7 +51,7 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
 
     private async Task HandleDataAsync(CrossChainTransferInfo transfer)
     {
-        var chain = await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(transfer.ChainId));
+        var chain = await ChainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(transfer.ChainId));
 
         switch (transfer.TransferType)
         {
@@ -119,7 +119,7 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
         }
 
         var toChain =
-            await _chainAppService.GetByAElfChainIdAsync(
+            await ChainAppService.GetByAElfChainIdAsync(
                 ChainHelper.ConvertBase58ToChainId(originalChainId));
         if (toChain == null)
         {

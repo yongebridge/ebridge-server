@@ -27,7 +27,7 @@ public class CommitmentRevealedProcessor : AElfEventProcessorBase<CommitmentReve
             Step = OracleStep.CommitmentRevealed,
             ChainId = chain.Id,
             QueryId = eventDetailsEto.QueryId.ToHex(),
-            UpdateTime = txInfoDto.BlockTime
+            LastUpdateHeight = txInfoDto.BlockNumber
         });
     }
 }

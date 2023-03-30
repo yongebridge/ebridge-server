@@ -26,7 +26,7 @@ public class ReportInfoAppServiceTests : CrossChainServerApplicationTestBase
             ReceiptHash = "ReceiptHash",
             ReceiptId = "ReceiptId",
             RoundId = 1,
-            UpdateTime = DateTime.UtcNow,
+            LastUpdateHeight = 100,
             TargetChainId = "SideChain_tDVV"
         };
         await _reportInfoAppService.CreateAsync(input);
@@ -38,31 +38,29 @@ public class ReportInfoAppServiceTests : CrossChainServerApplicationTestBase
         reports[0].ReceiptHash.ShouldBe(input.ReceiptHash);
         reports[0].ReceiptId.ShouldBe(input.ReceiptId);
         reports[0].RoundId.ShouldBe(input.RoundId);
-        reports[0].UpdateTime.ShouldBe(input.UpdateTime);
+        reports[0].LastUpdateHeight.ShouldBe(input.LastUpdateHeight);
         reports[0].TargetChainId.ShouldBe(input.TargetChainId);
         reports[0].Step.ShouldBe(ReportStep.Proposed);
 
-        var newDate = DateTime.UtcNow;
-        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1, "Token1", "SideChain_tDVV", ReportStep.Confirmed,  newDate);
+        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1, "Token1", "SideChain_tDVV", ReportStep.Confirmed,  150);
         
         reports = await _reportInfoRepository.GetListAsync();
         reports.Count.ShouldBe(1);
-        reports[0].UpdateTime.ShouldBe(input.UpdateTime);
+        reports[0].LastUpdateHeight.ShouldBe(input.LastUpdateHeight);
         reports[0].Step.ShouldBe(ReportStep.Proposed);
         
-        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1, "Token", "SideChain_tDVV", ReportStep.Confirmed,  newDate);
+        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1, "Token", "SideChain_tDVV", ReportStep.Confirmed,  150);
         
         reports = await _reportInfoRepository.GetListAsync();
         reports.Count.ShouldBe(1);
-        reports[0].UpdateTime.ShouldBe(newDate);
+        reports[0].LastUpdateHeight.ShouldBe(150);
         reports[0].Step.ShouldBe(ReportStep.Confirmed);
         
-        var newDate2 = DateTime.UtcNow;
-        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1, "Token", "SideChain_tDVV", ReportStep.Proposed,  newDate2);
+        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1, "Token", "SideChain_tDVV", ReportStep.Proposed,  200);
         
         reports = await _reportInfoRepository.GetListAsync();
         reports.Count.ShouldBe(1);
-        reports[0].UpdateTime.ShouldBe(newDate);
+        reports[0].LastUpdateHeight.ShouldBe(150);
         reports[0].Step.ShouldBe(ReportStep.Confirmed);
     }
 }

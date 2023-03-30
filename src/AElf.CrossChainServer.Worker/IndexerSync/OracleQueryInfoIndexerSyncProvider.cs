@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.CrossChain;
+using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Settings;
 using GraphQL;
 using GraphQL.Client.Abstractions;
@@ -13,24 +14,22 @@ namespace AElf.CrossChainServer.Worker.IndexerSync;
 public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly IOracleQueryInfoAppService _oracleQueryInfoAppService;
-    private readonly IChainAppService _chainAppService;
 
     public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
-        IChainAppService chainAppService,IJsonSerializer jsonSerializer,
+        IChainAppService chainAppService,IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService,
         IOracleQueryInfoAppService oracleQueryInfoAppService) : base(
-        graphQlClient, settingManager,jsonSerializer)
+        graphQlClient, settingManager,jsonSerializer,indexerAppService,chainAppService)
     {
-        _chainAppService = chainAppService;
         _oracleQueryInfoAppService = oracleQueryInfoAppService;
     }
 
     protected override string SyncType { get; } = CrossChainServerSettings.ReportIndexerSync;
 
-    protected override async Task<long> HandleDataAsync(string chainId, long startHeight, long endHeight)
+    protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
         var processedHeight = startHeight;
 
-        var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
+        var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.OracleQueryInfo.Count == 0)
         {
             return processedHeight;
@@ -47,7 +46,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     private async Task HandleDataAsync(OracleQueryInfoDto data)
     {
-        var chain = await _chainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(data.ChainId));
+        var chain = await ChainAppService.GetByAElfChainIdAsync(ChainHelper.ConvertBase58ToChainId(data.ChainId));
 
         switch (data.Step)
         {
@@ -60,7 +59,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                         Step = OracleStep.QueryCreated,
                         ChainId = chain.Id,
                         QueryId = data.QueryId,
-                        UpdateTime = data.BlockTime
+                        LastUpdateHeight = data.BlockHeight
                     });
                 }
                 break;
@@ -70,7 +69,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                     Step = data.Step,
                     ChainId = chain.Id,
                     QueryId = data.QueryId,
-                    UpdateTime = data.BlockTime
+                    LastUpdateHeight = data.BlockHeight
                 });
                 break;
         }

@@ -11,5 +11,5 @@ public class OracleQueryInfo : MultiChainEntity<Guid>
     [Keyword]
     public string Option { get; set; }
     public OracleStep Step { get; set; }
-    public DateTime UpdateTime { get; set; }
+    public long LastUpdateHeight { get; set; }
 }

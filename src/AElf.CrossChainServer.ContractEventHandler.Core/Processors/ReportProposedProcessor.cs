@@ -35,7 +35,7 @@ public class ReportProposedProcessor: AElfEventProcessorBase<ReportProposed>
             RoundId = eventDetailsEto.RoundId,
             Token = eventDetailsEto.Token,
             TargetChainId = eventDetailsEto.TargetChainId,
-            UpdateTime = txInfoDto.BlockTime
+            LastUpdateHeight = txInfoDto.BlockNumber
         });
     }
 }

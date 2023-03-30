@@ -26,7 +26,7 @@ public class SufficientCommitmentsCollectedProcessor : AElfEventProcessorBase<Su
             Step = OracleStep.SufficientCommitmentsCollected,
             ChainId = chain.Id,
             QueryId = eventDetailsEto.QueryId.ToHex(),
-            UpdateTime = txInfoDto.BlockTime
+            LastUpdateHeight = txInfoDto.BlockNumber
         });
     }
 }

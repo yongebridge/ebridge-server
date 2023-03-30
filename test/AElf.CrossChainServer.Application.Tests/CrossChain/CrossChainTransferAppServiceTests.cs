@@ -232,7 +232,7 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
             Step = OracleStep.QueryCreated,
             ChainId = "Ethereum",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         });
 
         await _crossChainTransferAppService.UpdateProgressAsync();
@@ -255,28 +255,28 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
             Step = OracleStep.Committed,
             ChainId = "Ethereum",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         });
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.SufficientCommitmentsCollected,
             ChainId = "Ethereum",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         });
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.CommitmentRevealed,
             ChainId = "Ethereum",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         });
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.QueryCompleted,
             ChainId = "Ethereum",
             QueryId = "QueryId",
-            UpdateTime = DateTime.UtcNow
+            LastUpdateHeight = 100
         });
 
         await Task.Delay(1000);
@@ -406,7 +406,7 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         status.Items.Count.ShouldBe(1);
         status.Items[0].Progress.ShouldBe(100/3D);
         
-        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1,"Eth","Ethereum", ReportStep.Confirmed, DateTime.UtcNow);
+        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1,"Eth","Ethereum", ReportStep.Confirmed, 100);
         await Task.Delay(2000);
         await _crossChainTransferAppService.UpdateProgressAsync();
         list = await _crossChainTransferAppService.GetListAsync(new GetCrossChainTransfersInput
@@ -422,7 +422,7 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         status.Items.Count.ShouldBe(1);
         status.Items[0].Progress.ShouldBe(200/3D);
 
-        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1,"Eth", "Ethereum",ReportStep.Transmitted, DateTime.UtcNow);
+        await _reportInfoAppService.UpdateStepAsync("MainChain_AELF",1,"Eth", "Ethereum",ReportStep.Transmitted, 110);
         await Task.Delay(2000);
         await _crossChainTransferAppService.UpdateProgressAsync();
         list = await _crossChainTransferAppService.GetListAsync(new GetCrossChainTransfersInput

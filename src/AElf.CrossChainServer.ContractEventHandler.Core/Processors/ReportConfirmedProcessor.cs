@@ -29,6 +29,6 @@ public class ReportConfirmedProcessor: AElfEventProcessorBase<ReportConfirmed>
         }
         var chain = await _chainAppService.GetByAElfChainIdAsync(txInfoDto.ChainId);
         await _reportInfoAppService.UpdateStepAsync(chain.Id, eventDetailsEto.RoundId, eventDetailsEto.Token,
-            eventDetailsEto.TargetChainId, ReportStep.Confirmed, txInfoDto.BlockTime);
+            eventDetailsEto.TargetChainId, ReportStep.Confirmed, txInfoDto.BlockNumber);
     }
 }

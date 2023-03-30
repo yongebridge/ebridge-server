@@ -10,5 +10,5 @@ public class CreateReportInfoInput
     public string TargetChainId { get; set; }
     public string ReceiptId { get; set; }
     public string ReceiptHash { get; set; }
-    public DateTime UpdateTime { get; set; }
+    public long LastUpdateHeight { get; set; }
 }

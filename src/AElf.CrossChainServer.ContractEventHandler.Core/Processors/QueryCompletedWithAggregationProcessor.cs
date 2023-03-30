@@ -26,7 +26,7 @@ public class QueryCompletedWithAggregationProcessor : AElfEventProcessorBase<Que
             Step = OracleStep.QueryCompleted,
             ChainId = chain.Id,
             QueryId = eventDetailsEto.QueryId.ToHex(),
-            UpdateTime = txInfoDto.BlockTime
+            LastUpdateHeight = txInfoDto.BlockNumber
         });
     }
 }
