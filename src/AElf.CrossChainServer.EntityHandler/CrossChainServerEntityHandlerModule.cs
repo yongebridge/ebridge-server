@@ -77,9 +77,8 @@ namespace AElf.CrossChainServer.EntityHandler
         private void ConfigureGraphQl(ServiceConfigurationContext context,
             IConfiguration configuration)
         {
-            context.Services.AddSingleton(new GraphQLHttpClient(configuration["GraphQL:Configuration"],
+            context.Services.AddSingleton<IGraphQLClient>(new GraphQLHttpClient(configuration["GraphQL:Configuration"],
                 new NewtonsoftJsonSerializer()));
-            context.Services.AddScoped<IGraphQLClient>(sp => sp.GetRequiredService<GraphQLHttpClient>());
         }
     }
 }
