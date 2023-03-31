@@ -113,7 +113,7 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
     private async Task<string> GetChainIdAsync(string originalChainId, CrossChainType crossChainType)
     {
         var chainId = originalChainId;
-        if (crossChainType == CrossChainType.Homogeneous)
+        if (crossChainType == CrossChainType.Heterogeneous)
         {
             return chainId;
         }
