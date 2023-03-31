@@ -19,7 +19,7 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
     {
         _chainAppService = chainAppService;
         _indexerSyncProviders = indexerSyncProviders.ToList();
-        Timer.Period = 1000 * 5;
+        Timer.Period = 1000 * 1;
     }
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)

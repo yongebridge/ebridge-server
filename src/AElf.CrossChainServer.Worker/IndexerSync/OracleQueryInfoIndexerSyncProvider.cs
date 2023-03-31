@@ -32,7 +32,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.OracleQueryInfo.Count == 0)
         {
-            return processedHeight;
+            return endHeight;
         }
 
         foreach (var oracleQueryInfo in data.OracleQueryInfo)
@@ -82,7 +82,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
             oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
                     id,
                     chainId,
                     blockHash,
@@ -94,7 +93,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                     endIndex,
                     step
                 }
-            }
         }",
             Variables = new
             {
@@ -108,7 +106,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 
 public class OracleQueryInfoResponse
 {
-    public List<OracleQueryInfoDto> OracleQueryInfo { get; set; }
+    public List<OracleQueryInfoDto> OracleQueryInfo { get; set; } = new();
 }
 
 public class OracleQueryInfoDto : GraphQLDto

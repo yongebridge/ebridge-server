@@ -32,7 +32,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.ReportInfo.Count == 0)
         {
-            return processedHeight;
+            return endHeight;
         }
 
         foreach (var reportInfo in data.ReportInfo)
@@ -76,7 +76,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
             reportInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
                     id,
                     chainId,
                     blockHash,
@@ -88,7 +87,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     receiptId,
                     receiptHash,
                     step                   
-                }
             }
         }",
             Variables = new
@@ -103,7 +101,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 
 public class ReportInfoResponse
 {
-    public List<ReportInfoDto> ReportInfo { get; set; }
+    public List<ReportInfoDto> ReportInfo { get; set; } = new();
 }
 
 public class ReportInfoDto : GraphQLDto

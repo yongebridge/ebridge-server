@@ -30,12 +30,12 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
         var processedHeight = startHeight;
 
         var data = await QueryDataAsync<CrossChainIndexingInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
-        if (data == null || data.CrossChainIndexingInfoDto.Count == 0)
+        if (data == null || data.CrossChainIndexingInfo.Count == 0)
         {
-            return processedHeight;
+            return endHeight;
         }
 
-        foreach (var indexing in data.CrossChainIndexingInfoDto)
+        foreach (var indexing in data.CrossChainIndexingInfo)
         {
             await HandleDataAsync(indexing);
             processedHeight = indexing.BlockHeight;
@@ -70,8 +70,7 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
         {
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
-            oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
+            crossChainIndexingInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
                     id,
                     chainId,
                     blockHash,
@@ -79,7 +78,6 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
                     blockTime,
                     indexChainId,
                     indexBlockHeight
-                }
             }
         }",
             Variables = new
@@ -94,7 +92,7 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
 
 public class CrossChainIndexingInfoResponse
 {
-    public List<CrossChainIndexingInfoDto> CrossChainIndexingInfoDto { get; set; }
+    public List<CrossChainIndexingInfoDto> CrossChainIndexingInfo { get; set; } = new ();
 }
 
 public class CrossChainIndexingInfoDto : GraphQLDto

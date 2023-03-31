@@ -37,7 +37,7 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
         var data = await QueryDataAsync<CrossChainTransferInfoDto>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.CrossChainTransferInfo.Count == 0)
         {
-            return processedHeight;
+            return endHeight;
         }
 
         foreach (var crossChainTransfer in data.CrossChainTransferInfo)
@@ -136,8 +136,7 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
         {
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
-            oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
+            crossChainTransferInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
                     id,
                     chainId,
                     blockHash,
@@ -157,7 +156,6 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                     receiveAmount,
                     receiveTime,
                     receiveTransactionId
-                }
             }
         }",
             Variables = new

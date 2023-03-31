@@ -61,7 +61,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
         Logger.LogError("Query indexer failed. errors: {Errors}",
             string.Join(",", data.Errors.Select(e => e.Message).ToList()));
-        return default;
+        throw new Exception("Query indexer failed. ");
     }
 
     private async Task<long> GetIndexBlockHeightAsync(string chainId)
