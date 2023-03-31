@@ -23,7 +23,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         _oracleQueryInfoAppService = oracleQueryInfoAppService;
     }
 
-    protected override string SyncType { get; } = CrossChainServerSettings.ReportIndexerSync;
+    protected override string SyncType { get; } = CrossChainServerSettings.OracleQueryIndexerSync;
 
     protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
