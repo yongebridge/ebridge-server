@@ -50,7 +50,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 
         switch (data.Step)
         {
-            case OracleStep.QueryCreated:
+            case IndexerOracleStep.QUERY_CREATED:
                 for (var i = data.StartIndex; i <= data.EndIndex; i++)
                 {
                     await _oracleQueryInfoAppService.CreateAsync(new CreateOracleQueryInfoInput
@@ -66,7 +66,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
             default:
                 await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput()
                 {
-                    Step = data.Step,
+                    Step = (OracleStep)(int)data.Step,
                     ChainId = chain.Id,
                     QueryId = data.QueryId,
                     LastUpdateHeight = data.BlockHeight
@@ -115,5 +115,14 @@ public class OracleQueryInfoDto : GraphQLDto
     public string ReceiptHash { get; set; }
     public long StartIndex { get; set; }
     public long EndIndex { get; set; }
-    public OracleStep Step { get; set; }
+    public IndexerOracleStep Step { get; set; }
+}
+
+public enum IndexerOracleStep
+{
+    QUERY_CREATED,
+    COMMITTED,
+    SUFFICIENT_COMMITMENTS_COLLECTED,
+    COMMITMENT_REVEALED,
+    QUERY_COMPLETED
 }
