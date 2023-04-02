@@ -84,8 +84,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     roundId,
                     token,
                     targetChainId,
-                    receiptId,
-                    receiptHash,
                     step                   
             }
         }",
