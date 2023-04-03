@@ -155,7 +155,8 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                     receiveTokenSymbol,
                     receiveAmount,
                     receiveTime,
-                    receiveTransactionId
+                    receiveTransactionId,
+                    receiptId
             }
         }",
             Variables = new
