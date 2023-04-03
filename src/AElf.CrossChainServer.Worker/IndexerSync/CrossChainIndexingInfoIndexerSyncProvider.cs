@@ -27,8 +27,6 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
-        var processedHeight = startHeight;
-
         var data = await QueryDataAsync<CrossChainIndexingInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.CrossChainIndexingInfo.Count == 0)
         {
@@ -38,10 +36,9 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
         foreach (var indexing in data.CrossChainIndexingInfo)
         {
             await HandleDataAsync(indexing);
-            processedHeight = indexing.BlockHeight;
         }
 
-        return processedHeight;
+        return endHeight;
     }
 
     private async Task HandleDataAsync(CrossChainIndexingInfoDto data)

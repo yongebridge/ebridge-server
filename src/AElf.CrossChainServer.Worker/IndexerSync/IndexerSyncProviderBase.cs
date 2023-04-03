@@ -25,6 +25,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
     public ILogger<IndexerSyncProviderBase> Logger { get; set; }
 
     private const int MaxRequestCount = 1000;
+    private const int SyncDelayLimit = 100;
 
     protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, ISettingManager settingManager,
         IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService, IChainAppService chainAppService)
@@ -43,7 +44,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         
         syncSetting.TryGetValue(chainId, out var syncHeight);
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
-        var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight);
+        var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight- SyncDelayLimit);
         var chain = await ChainAppService.GetAsync(chainId);
         var height = await HandleDataAsync(ChainHelper.ConvertChainIdToBase58(chain.AElfChainId), syncHeight+1, endHeight);
         

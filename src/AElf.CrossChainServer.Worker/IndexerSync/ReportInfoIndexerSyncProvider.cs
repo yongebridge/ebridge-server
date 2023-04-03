@@ -27,8 +27,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
-        var processedHeight = startHeight;
-
         var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.ReportInfo.Count == 0)
         {
@@ -38,10 +36,9 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         foreach (var reportInfo in data.ReportInfo)
         {
             await HandleDataAsync(reportInfo);
-            processedHeight = reportInfo.BlockHeight;
         }
 
-        return processedHeight;
+        return endHeight;
     }
 
     private async Task HandleDataAsync(ReportInfoDto report)

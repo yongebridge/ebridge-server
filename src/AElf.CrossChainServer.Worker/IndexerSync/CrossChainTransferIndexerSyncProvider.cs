@@ -32,8 +32,6 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
 
     protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
-        var processedHeight = startHeight;
-
         var data = await QueryDataAsync<CrossChainTransferInfoDto>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.CrossChainTransferInfo.Count == 0)
         {
@@ -43,10 +41,9 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
         foreach (var crossChainTransfer in data.CrossChainTransferInfo)
         {
             await HandleDataAsync(crossChainTransfer);
-            processedHeight = crossChainTransfer.BlockHeight;
         }
 
-        return processedHeight;
+        return endHeight;
     }
 
     private async Task HandleDataAsync(CrossChainTransferInfo transfer)
@@ -78,7 +75,8 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                     ToChainId = toChainId,
                     TransferBlockHeight = transfer.BlockHeight,
                     TransferTime = transfer.TransferTime,
-                    TransferTransactionId = transfer.TransferTransactionId
+                    TransferTransactionId = transfer.TransferTransactionId,
+                    ReceiptId = transfer.ReceiptId
                 });
                 break;
             case TransferType.Receive:
@@ -104,7 +102,8 @@ public class CrossChainTransferIndexerSyncProvider : IndexerSyncProviderBase
                     TransferTransactionId = transfer.TransferTransactionId,
                     ReceiveTokenId = receiveToken.Id,
                     FromAddress = transfer.FromAddress,
-                    ToAddress = transfer.ToAddress
+                    ToAddress = transfer.ToAddress,
+                    ReceiptId = transfer.ReceiptId
                 });
                 break;
         }

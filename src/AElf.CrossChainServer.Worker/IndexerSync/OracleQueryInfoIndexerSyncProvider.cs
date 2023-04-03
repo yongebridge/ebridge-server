@@ -27,8 +27,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     protected override async Task<long> HandleDataAsync(string aelfChainId, long startHeight, long endHeight)
     {
-        var processedHeight = startHeight;
-
         var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(aelfChainId, startHeight, endHeight));
         if (data == null || data.OracleQueryInfo.Count == 0)
         {
@@ -38,10 +36,9 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         foreach (var oracleQueryInfo in data.OracleQueryInfo)
         {
             await HandleDataAsync(oracleQueryInfo);
-            processedHeight = oracleQueryInfo.BlockHeight;
         }
 
-        return processedHeight;
+        return endHeight;
     }
 
     private async Task HandleDataAsync(OracleQueryInfoDto data)
