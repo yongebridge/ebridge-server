@@ -9,7 +9,6 @@ using AElf.CrossChainServer.Tokens;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Volo.Abp.Json;
-using Volo.Abp.SettingManagement;
 
 namespace AElf.CrossChainServer.Worker.IndexerSync;
 

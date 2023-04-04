@@ -29,12 +29,9 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
             Type = BlockchainType.AElf
         });
 
-        foreach (var chain in chains.Items)
-        {
-            foreach (var provider in _indexerSyncProviders)
-            {
-                await provider.ExecuteAsync(chain.Id);
-            }
-        }
+        var tasks = chains.Items.Select(o => o.Id).SelectMany(chainId =>
+            _indexerSyncProviders.Select(provider => provider.ExecuteAsync(chainId)));
+
+        await Task.WhenAll(tasks);
     }
 }

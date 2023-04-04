@@ -68,6 +68,7 @@ public class CrossChainServerDbContext :
     public DbSet<BridgeContractSyncInfo> BridgeContractSyncInfos { get; set; }
     public DbSet<OracleQueryInfo> OracleQueryInfos { get; set; }
     public DbSet<ReportInfo> ReportInfos { get; set; }
+    public DbSet<Settings.Settings> Settings { get; set; }
 
     public CrossChainServerDbContext(DbContextOptions<CrossChainServerDbContext> options)
         : base(options)
@@ -139,6 +140,13 @@ public class CrossChainServerDbContext :
         {
             b.ToTable(CrossChainServerConsts.DbTablePrefix + "ReportInfos", CrossChainServerConsts.DbSchema);
             b.HasIndex(o => new {o.ChainId, o.RoundId, o.Token, o.TargetChainId});
+            b.ConfigureByConvention(); 
+        });
+        
+        builder.Entity<Settings.Settings>(b =>
+        {
+            b.ToTable(CrossChainServerConsts.DbTablePrefix + "Settings", CrossChainServerConsts.DbSchema);
+            b.HasIndex(o => new {o.ChainId, o.Name});
             b.ConfigureByConvention(); 
         });
     }

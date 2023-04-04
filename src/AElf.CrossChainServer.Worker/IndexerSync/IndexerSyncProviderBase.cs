@@ -4,13 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Indexer;
+using AElf.CrossChainServer.Settings;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Json;
-using Volo.Abp.SettingManagement;
 
 namespace AElf.CrossChainServer.Worker.IndexerSync;
 
@@ -40,16 +40,13 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     public async Task ExecuteAsync(string chainId)
     {
-        var syncSetting = await GetSyncSettingAsync();
-        
-        syncSetting.TryGetValue(chainId, out var syncHeight);
+        var syncHeight = await GetSyncHeightAsync(chainId);
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
         var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight- SyncDelayLimit);
         var chain = await ChainAppService.GetAsync(chainId);
         var height = await HandleDataAsync(ChainHelper.ConvertChainIdToBase58(chain.AElfChainId), syncHeight+1, endHeight);
         
-        syncSetting[chainId] = height;
-        await SetSyncSettingAsync(syncSetting);
+        await SetSyncHeightAsync(chainId, height);
     }
 
     protected async Task<T> QueryDataAsync<T>(GraphQLRequest request)
@@ -70,17 +67,15 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         return await IndexerAppService.GetLatestIndexHeightAsync(chainId);
     }
 
-    private async Task<Dictionary<string, long>> GetSyncSettingAsync()
+    private async Task<long> GetSyncHeightAsync(string chainId)
     {
-        var setting = await SettingManager.GetOrNullGlobalAsync(SyncType);
-        return setting == null
-            ? new Dictionary<string, long>()
-            : JsonSerializer.Deserialize<Dictionary<string, long>>(setting);
+        var setting = await SettingManager.GetOrNullAsync(chainId, SyncType);
+        return setting == null ? 0 : long.Parse(setting);
     }
 
-    private async Task SetSyncSettingAsync(Dictionary<string,long> setting)
+    private async Task SetSyncHeightAsync(string chainId, long height)
     {
-        await SettingManager.SetGlobalAsync(SyncType, JsonSerializer.Serialize(setting));
+        await SettingManager.SetAsync(chainId, SyncType, height.ToString());
     }
 
     protected abstract string SyncType { get; }
