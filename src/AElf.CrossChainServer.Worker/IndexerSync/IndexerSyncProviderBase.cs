@@ -77,6 +77,8 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
     {
         await SettingManager.SetAsync(chainId, SyncType, height.ToString());
     }
+    
+    
 
     protected abstract string SyncType { get; }
 
