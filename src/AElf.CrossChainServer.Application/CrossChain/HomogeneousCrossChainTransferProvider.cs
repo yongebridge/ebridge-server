@@ -58,11 +58,14 @@ public class HomogeneousCrossChainTransferProvider : ICrossChainTransferProvider
             {
                 To = Address.FromBase58(paramsJson["to"].ToString()),
                 Amount = long.Parse(paramsJson["amount"].ToString()),
-                Memo = paramsJson["memo"].ToString(),
                 Symbol = paramsJson["symbol"].ToString(),
                 IssueChainId = int.Parse(paramsJson["issueChainId"].ToString()),
                 ToChainId = int.Parse(paramsJson["toChainId"].ToString())
             };
+            if (paramsJson["memo"] != null)
+            {
+                param.Memo = paramsJson["memo"].ToString(); 
+            }
 
             var transaction = new Transaction
             {
