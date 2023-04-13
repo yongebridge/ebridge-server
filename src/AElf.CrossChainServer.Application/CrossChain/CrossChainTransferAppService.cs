@@ -299,7 +299,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError("Update receive transaction failed. Id: {transferId}, Error: {message}",
+                    Logger.LogError(ex, "Update receive transaction failed. Id: {transferId}, Error: {message}",
                         transfer.Id, ex.Message);
                 }
             }
