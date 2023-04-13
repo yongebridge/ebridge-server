@@ -352,7 +352,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError("Send auto receive tx failed. Id: {transferId}, Error: {message}", transfer.Id, ex.Message);
+                    Logger.LogError(ex, "Send auto receive tx failed. Id: {transferId}, Error: {message}", transfer.Id,
+                        ex.Message);
                 }
             }
 
