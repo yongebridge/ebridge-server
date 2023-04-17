@@ -230,7 +230,7 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         {
             Option = "ReceiptId",
             Step = OracleStep.QueryCreated,
-            ChainId = "Ethereum",
+            ChainId = "MainChain_AELF",
             QueryId = "QueryId",
             LastUpdateHeight = 100
         });
@@ -253,28 +253,28 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.Committed,
-            ChainId = "Ethereum",
+            ChainId = "MainChain_AELF",
             QueryId = "QueryId",
             LastUpdateHeight = 100
         });
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.SufficientCommitmentsCollected,
-            ChainId = "Ethereum",
+            ChainId = "MainChain_AELF",
             QueryId = "QueryId",
             LastUpdateHeight = 100
         });
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.CommitmentRevealed,
-            ChainId = "Ethereum",
+            ChainId = "MainChain_AELF",
             QueryId = "QueryId",
             LastUpdateHeight = 100
         });
         await _oracleQueryInfoAppService.UpdateAsync(new UpdateOracleQueryInfoInput
         {
             Step = OracleStep.QueryCompleted,
-            ChainId = "Ethereum",
+            ChainId = "MainChain_AELF",
             QueryId = "QueryId",
             LastUpdateHeight = 100
         });

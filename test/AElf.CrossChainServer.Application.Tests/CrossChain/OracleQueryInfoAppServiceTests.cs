@@ -32,7 +32,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.CreateAsync(createInput);
 
-        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.Option);
+        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.ChainId, createInput.Option);
         progress.ShouldBe(20);
         
         var updateInput = new UpdateOracleQueryInfoInput
@@ -44,7 +44,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.Option);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.ChainId, createInput.Option);
         progress.ShouldBe(20);
 
         updateInput = new UpdateOracleQueryInfoInput
@@ -56,7 +56,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.Option);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.ChainId, createInput.Option);
         progress.ShouldBe(40);
         
         updateInput = new UpdateOracleQueryInfoInput
@@ -68,7 +68,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.Option);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.ChainId, createInput.Option);
         progress.ShouldBe(60);
         
         updateInput = new UpdateOracleQueryInfoInput
@@ -80,7 +80,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.Option);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput.ChainId, createInput.Option);
         progress.ShouldBe(60);
     }
     
@@ -97,7 +97,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.CreateAsync(createInput1);
 
-        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.Option);
+        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.ChainId, createInput1.Option);
         progress.ShouldBe(20);
         
         var createInput2 = new CreateOracleQueryInfoInput
@@ -110,7 +110,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.CreateAsync(createInput2);
 
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.Option);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.ChainId, createInput1.Option);
         progress.ShouldBe(20);
 
         var updateInput = new UpdateOracleQueryInfoInput
@@ -122,7 +122,7 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         };
         await _oracleQueryInfoAppService.UpdateAsync(updateInput);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.Option);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.ChainId, createInput1.Option);
         progress.ShouldBe(40);
     }
 }

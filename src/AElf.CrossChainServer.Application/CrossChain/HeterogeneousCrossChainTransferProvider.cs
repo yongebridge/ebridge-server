@@ -46,10 +46,10 @@ public class HeterogeneousCrossChainTransferProvider : ICrossChainTransferProvid
         var chain = await _chainAppService.GetAsync(transfer.ToChainId);
         if (chain.Type == BlockchainType.AElf)
         {
-            return await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(transfer.ReceiptId);
+            return await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(transfer.ToChainId,transfer.ReceiptId);
         }
 
-        return await _reportInfoAppService.CalculateCrossChainProgressAsync(transfer.ReceiptId);
+        return await _reportInfoAppService.CalculateCrossChainProgressAsync(transfer.FromChainId, transfer.ReceiptId);
     }
 
     public async Task<string> SendReceiveTransactionAsync(CrossChainTransfer transfer)

@@ -8,5 +8,5 @@ public interface IOracleQueryInfoAppService
     Task UpdateAsync(UpdateOracleQueryInfoInput input);
     Task AddIndexAsync(AddOracleQueryInfoIndexInput input);
     Task UpdateIndexAsync(UpdateOracleQueryInfoIndexInput input);
-    Task<int> CalculateCrossChainProgressAsync(string option);
+    Task<int> CalculateCrossChainProgressAsync(string chainId, string option);
 }
