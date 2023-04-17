@@ -3,6 +3,7 @@ using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts.Bridge;
 using AElf.CrossChainServer.CrossChain;
 using AElf.CrossChainServer.EntityHandler.Core;
+using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp.Modularity;
@@ -28,7 +29,8 @@ public class CrossChainServerApplicationTestModule : AbpModule
         {
             o.ChainNodeApis = new Dictionary<string, string>
             {
-                { "Ethereum", "https://kovan.infura.io/v3/" }
+                { "Ethereum", "https://kovan.infura.io/v3/" },
+                { "AELF", "https://aelf.io" }
             };
         });
 
@@ -53,5 +55,15 @@ public class CrossChainServerApplicationTestModule : AbpModule
                 { "MainChain_AELF", "CrossChain" }
             };
         });
+        
+        Configure<TokenSymbolMappingOptions>(o =>
+        {
+            o.Mapping = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
+            o.Mapping["Ethereum"] = new Dictionary<string, Dictionary<string, string>>();
+            o.Mapping["Ethereum"]["AELF"] = new Dictionary<string, string>
+            {
+                { "WETH", "ETH" }
+            };
+        }); 
     }
 }
