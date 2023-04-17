@@ -47,7 +47,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         var contractEvent = EventContextHelper.Create("QueryCreated",9992731);
         await _queryCreatedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
-        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(0);
         
         queryEvent = new QueryCreated
@@ -62,7 +62,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("QueryCreated",9992731);
         await _queryCreatedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(20);
         
         var committedEvent = new Committed
@@ -72,7 +72,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("Committed",9992731);
         await _committedTestProcessor.HandleEventAsync(committedEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(40);
         
         var sufficientCommitmentsCollectedEvent = new SufficientCommitmentsCollected
@@ -82,7 +82,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("SufficientCommitmentsCollected",9992731);
         await _sufficientCommitmentsCollectedTestProcessor.HandleEventAsync(sufficientCommitmentsCollectedEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(60);
         
         var commitmentRevealedEvent = new CommitmentRevealed
@@ -92,7 +92,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("CommitmentRevealed",9992731);
         await _commitmentRevealedTestProcessor.HandleEventAsync(commitmentRevealedEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(80);
         
         var queryCompletedWithAggregationEvent = new QueryCompletedWithAggregation
@@ -102,7 +102,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("QueryCompletedWithAggregation",9992731);
         await _queryCompletedWithAggregationTestProcessor.HandleEventAsync(queryCompletedWithAggregationEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(100);
     }
     
@@ -124,7 +124,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         var contractEvent = EventContextHelper.Create("QueryCreated",9992731);
         await _queryCreatedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
-        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        var progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(0);
         
         queryEvent = new QueryCreated
@@ -139,7 +139,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("QueryCreated",9992731);
         await _queryCreatedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(20);
         
         var committedEvent = new Committed
@@ -149,7 +149,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("Committed",9992731);
         await _committedTestProcessor.HandleEventAsync(committedEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(40);
         
         var sufficientCommitmentsCollectedEvent = new SufficientCommitmentsCollected
@@ -159,7 +159,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("SufficientCommitmentsCollected",9992731);
         await _sufficientCommitmentsCollectedTestProcessor.HandleEventAsync(sufficientCommitmentsCollectedEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(60);
         
         var commitmentRevealedEvent = new CommitmentRevealed
@@ -169,7 +169,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("CommitmentRevealed",9992731);
         await _commitmentRevealedTestProcessor.HandleEventAsync(commitmentRevealedEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(80);
         
         var queryCompletedWithAggregationEvent = new QueryCompletedWithoutAggregation
@@ -179,7 +179,7 @@ public class OracleProcessorTests : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("QueryCompletedWithoutAggregation",9992731);
         await _queryCompletedWithoutAggregationTestProcessor.HandleEventAsync(queryCompletedWithAggregationEvent, contractEvent);
         
-        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(100);
     }
 }

@@ -37,7 +37,7 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         var contractEvent = EventContextHelper.Create("ReportProposed",9992731);
         await _reportProposedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
-        var progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        var progress = await _reportInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(0);
         
         queryEvent = new ReportProposed
@@ -54,7 +54,7 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("ReportProposed",9992731);
         await _reportProposedTestProcessor.HandleEventAsync(queryEvent, contractEvent);
         
-        progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _reportInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(100/3);
 
         var reportConfirmedEvent = new ReportConfirmed
@@ -66,7 +66,7 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("ReportConfirmed",9992731);
         await _reportConfirmedTestProcessor.HandleEventAsync(reportConfirmedEvent, contractEvent);
         
-        progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _reportInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(100/3);
         
         reportConfirmedEvent = new ReportConfirmed
@@ -79,7 +79,7 @@ public class ReportProcessorTest : ContractEventHandlerCoreTestBase
         contractEvent = EventContextHelper.Create("ReportConfirmed",9992731);
         await _reportConfirmedTestProcessor.HandleEventAsync(reportConfirmedEvent, contractEvent);
         
-        progress = await _reportInfoAppService.CalculateCrossChainProgressAsync(receiptId);
+        progress = await _reportInfoAppService.CalculateCrossChainProgressAsync("MainChain_AELF",receiptId);
         progress.ShouldBe(200/3);
     }
 }
