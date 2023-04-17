@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Client.Dto;
 using AElf.CrossChainServer.Tokens;
@@ -41,16 +42,39 @@ public class MockAElfClientProvider : IBlockchainClientProvider
 
     public Task<ChainStatusDto> GetChainStatusAsync(string chainId)
     {
-        throw new System.NotImplementedException();
+        return Task.FromResult(new ChainStatusDto
+        {
+            ChainId = chainId,
+            BlockHeight = 100,
+            ConfirmedBlockHeight = 90
+        });
     }
 
     public Task<TransactionResultDto> GetTransactionResultAsync(string chainId, string transactionId)
     {
-        throw new System.NotImplementedException();
+        return Task.FromResult(new TransactionResultDto
+        {
+            ChainId = chainId,
+            BlockHeight = 100,
+            Transaction = new TransactionDto(),
+            BlockHash = "BlockHash",
+            IsFailed = false,
+            IsMined = true
+        });
     }
 
     public Task<MerklePathDto> GetMerklePathAsync(string chainId, string txId)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(new MerklePathDto
+        {
+            MerklePathNodes = new List<MerklePathNodeDto>
+            {
+                new MerklePathNodeDto
+                {
+                    Hash = "Hash",
+                    IsLeftChildNode = true
+                }
+            }
+        });
     }
 }

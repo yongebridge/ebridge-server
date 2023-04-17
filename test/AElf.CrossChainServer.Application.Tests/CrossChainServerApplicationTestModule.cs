@@ -30,7 +30,7 @@ public class CrossChainServerApplicationTestModule : AbpModule
             o.ChainNodeApis = new Dictionary<string, string>
             {
                 { "Ethereum", "https://kovan.infura.io/v3/" },
-                { "AELF", "https://aelf.io" }
+                { "MainChain_AELF", "https://aelf.io" }
             };
         });
 
@@ -60,7 +60,7 @@ public class CrossChainServerApplicationTestModule : AbpModule
         {
             o.Mapping = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
             o.Mapping["Ethereum"] = new Dictionary<string, Dictionary<string, string>>();
-            o.Mapping["Ethereum"]["AELF"] = new Dictionary<string, string>
+            o.Mapping["Ethereum"]["MainChain_AELF"] = new Dictionary<string, string>
             {
                 { "WETH", "ETH" }
             };

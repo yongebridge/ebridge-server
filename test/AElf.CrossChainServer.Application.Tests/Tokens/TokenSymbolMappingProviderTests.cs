@@ -16,10 +16,10 @@ public class TokenSymbolMappingProviderTests: CrossChainServerApplicationTestBas
     [Fact]
     public async Task Test()
     {
-        var symbol = _tokenSymbolMappingProvider.GetMappingSymbol("Ethereum", "AELF", "WETH");
+        var symbol = _tokenSymbolMappingProvider.GetMappingSymbol("Ethereum", "MainChain_AELF", "WETH");
         symbol.ShouldBe("ETH");
         
-        symbol = _tokenSymbolMappingProvider.GetMappingSymbol("Ethereum", "AELF", "USDT");
+        symbol = _tokenSymbolMappingProvider.GetMappingSymbol("Ethereum", "MainChain_AELF", "USDT");
         symbol.ShouldBe("USDT");
     }
 }
