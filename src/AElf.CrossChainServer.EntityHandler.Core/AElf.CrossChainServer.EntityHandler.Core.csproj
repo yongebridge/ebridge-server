@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AElf.CrossChainServer.Application.Contracts\AElf.CrossChainServer.Application.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Volo.Abp.Core" Version="5.3.0" />
+      <PackageReference Include="Volo.Abp.Ddd.Domain" Version="5.3.0" />
+      <PackageReference Include="Volo.Abp.ObjectMapping" Version="5.3.0" />
+    </ItemGroup>
+
+</Project>
