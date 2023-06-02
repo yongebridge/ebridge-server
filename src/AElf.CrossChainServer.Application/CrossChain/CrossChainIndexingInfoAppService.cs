@@ -61,6 +61,11 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
         var fromChain = await _chainAppService.GetAsync(fromChainId);
         var toChain = await _chainAppService.GetAsync(toChainId);
         
+        if (fromChain.Type != BlockchainType.AElf || toChain.Type != BlockchainType.AElf)
+        {
+            throw new UserFriendlyException("parameter chainId is not valid!");
+        }
+        
         if (fromChain.IsMainChain)
         {
             return await CalculateAElfProgressAsync(fromChain, toChain, height, txTime);
