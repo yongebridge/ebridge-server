@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Tokens;
 using Shouldly;
+using Volo.Abp.Validation;
 using Xunit;
 
 namespace AElf.CrossChainServer.CrossChain;
@@ -31,12 +33,12 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
     {
         var tokenTransfer = await _tokenAppService.GetAsync(new GetTokenInput
         {
-            ChainId ="MainChain_AELF",
+            ChainId = "MainChain_AELF",
             Symbol = "ELF"
         });
         var tokenReceived = await _tokenAppService.GetAsync(new GetTokenInput
         {
-            ChainId ="SideChain_tDVV",
+            ChainId = "SideChain_tDVV",
             Symbol = "ELF"
         });
 
@@ -80,7 +82,7 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         });
         status.Items.Count.ShouldBe(1);
         status.Items[0].Progress.ShouldBe(0);
-        
+
         await _crossChainIndexingInfoAppService.CreateAsync(new CreateCrossChainIndexingInfoInput
         {
             ChainId = "SideChain_tDVV",
@@ -100,12 +102,43 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         });
 
         await _crossChainTransferAppService.UpdateProgressAsync();
-        
+
+        var exception = await Assert.ThrowsAsync<AbpValidationException>(async () => await _crossChainTransferAppService.GetListAsync(new GetCrossChainTransfersInput
+        {
+            FromChainId = "FromChainId_FromChainId",
+            ToChainId = "ToChainId_ToChainId_ToChainId",
+            FromAddress = "FromAddress_FromAddress_FromAddress",
+            ToAddress = "ToAddress_ToAddress_ToAddress_ToAddress"
+        }));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("FromChainId")));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("ToChainId")));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("FromAddress")));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("ToAddress")));
+
         list = await _crossChainTransferAppService.GetListAsync(new GetCrossChainTransfersInput
         {
             MaxResultCount = 100
         });
         list.Items[0].Progress.ShouldBe(50);
+        
+        var guidList = new List<Guid>();
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        guidList.Add(new Guid());
+        
+        exception = await Assert.ThrowsAsync<AbpValidationException>(async () => await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
+        {
+            Ids = guidList
+        }));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("Ids")));
         
         status = await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
         {
