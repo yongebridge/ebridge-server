@@ -20,8 +20,8 @@ public class TokenAppServiceTests: CrossChainServerApplicationTestBase
     {
         var getTokenInput = new GetTokenInput
         {
-            Address = "Address_Address_Address_Address",
-            Symbol = "SymbolSymbol_SymbolSymbol_SymbolSymbol_SymbolSymbol_SymbolSymbol_SymbolSymbol_SymbolSymbol",
+            Address = "Address_Address_Address_Address_Address_Address_Address_Address_Address_Address_Address_Address",
+            Symbol = "SymbolSymbol_SymbolSymbol_SymbolSymbol",
             ChainId = "MainChain_AELF_AELF_AELF"
         };
 

@@ -107,8 +107,8 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         {
             FromChainId = "FromChainId_FromChainId",
             ToChainId = "ToChainId_ToChainId_ToChainId",
-            FromAddress = "FromAddress_FromAddress_FromAddress",
-            ToAddress = "ToAddress_ToAddress_ToAddress_ToAddress"
+            FromAddress = "FromAddress_FromAddress_FromAddress_FromAddress_FromAddress_FromAddress_FromAddress_FromAddress",
+            ToAddress = "ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress"
         }));
         exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("FromChainId")));
         exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("ToChainId")));
@@ -122,18 +122,10 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         list.Items[0].Progress.ShouldBe(50);
         
         var guidList = new List<Guid>();
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        guidList.Add(new Guid());
-        
+        for (int i = 0; i < 11; i++)
+        {
+            guidList.Add(new Guid());
+        }
         exception = await Assert.ThrowsAsync<AbpValidationException>(async () => await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
         {
             Ids = guidList
