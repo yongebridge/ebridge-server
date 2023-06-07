@@ -78,7 +78,7 @@ public class CrossChainIndexingInfoAppServiceTests: CrossChainServerApplicationT
     [Fact]
     public async Task Calculate_IsAELF_Test()
     {
-        var exception = await Assert.ThrowsAsync<UserFriendlyException>(async () => await _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync("Ethereum", "SideChain_tDVV", 100, DateTime.UtcNow.AddSeconds(-10)));
+        var exception = await Assert.ThrowsAsync<UserFriendlyException>(async () => await _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync("Ethereum", "SideChain_tDVV", 100));
         exception.Message.ShouldContain("parameter chainId is not valid");
     }
 
