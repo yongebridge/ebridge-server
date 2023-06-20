@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Shouldly;
+using Volo.Abp;
 using Xunit;
 
 namespace AElf.CrossChainServer.CrossChain;
@@ -73,7 +74,14 @@ public class CrossChainIndexingInfoAppServiceTests: CrossChainServerApplicationT
                 100);
         progress.ShouldBe(100);
     }
-    
+
+    [Fact]
+    public async Task Calculate_IsAELF_Test()
+    {
+        var exception = await Assert.ThrowsAsync<UserFriendlyException>(async () => await _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync("Ethereum", "SideChain_tDVV", 100));
+        exception.Message.ShouldContain("parameter chainId is not valid");
+    }
+
     [Fact]
     public async Task Homogeneous_MainToSide_Test()
     {

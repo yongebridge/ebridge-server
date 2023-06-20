@@ -51,6 +51,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
 
     public async Task<int> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height)
     {
+        var fromChain = await _chainAppService.GetAsync(fromChainId);
+        var toChain = await _chainAppService.GetAsync(toChainId);
+        if (fromChain.Type != BlockchainType.AElf || toChain.Type != BlockchainType.AElf)
+        {
+            throw new UserFriendlyException("parameter chainId is not valid!");
+        }
+        
         var block = await _blockchainAppService.GetBlockByHeightAsync(fromChainId, height);
         return await CalculateCrossChainProgressAsync(fromChainId, toChainId, height, block.Header.Time);
     }
@@ -60,7 +67,7 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
     {
         var fromChain = await _chainAppService.GetAsync(fromChainId);
         var toChain = await _chainAppService.GetAsync(toChainId);
-        
+
         if (fromChain.IsMainChain)
         {
             return await CalculateAElfProgressAsync(fromChain, toChain, height, txTime);

@@ -14,6 +14,7 @@ using AElf.CrossChainServer.Worker;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
+using Volo.Abp.Auditing;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Aliyun;
 
@@ -39,6 +40,7 @@ namespace AElf.CrossChainServer.EntityHandler
             ConfigureRedis(context, configuration);
             ConfigureBlob(configuration);
             ConfigureGraphQl(context, configuration);
+            ConfigureAuditLog(configuration);
             context.Services.AddHostedService<CrossChainServerHostedService>();
         }
         
@@ -79,6 +81,14 @@ namespace AElf.CrossChainServer.EntityHandler
         {
             context.Services.AddSingleton<IGraphQLClient>(new GraphQLHttpClient(configuration["GraphQL:Configuration"],
                 new NewtonsoftJsonSerializer()));
+        }
+        
+        private void ConfigureAuditLog(IConfiguration configuration)
+        {
+            Configure<AbpAuditingOptions>(options =>
+            {
+                options.IsEnabled = false;
+            });
         }
     }
 }

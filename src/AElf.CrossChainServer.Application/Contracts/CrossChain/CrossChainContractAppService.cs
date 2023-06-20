@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
 using AElf.Standards.ACS7;
 using Microsoft.Extensions.Options;
+using Volo.Abp;
 
 namespace AElf.CrossChainServer.Contracts.CrossChain;
 
+[RemoteService(IsEnabled = false)]
 public class CrossChainContractAppService : CrossChainServerAppService, ICrossChainContractAppService
 {
     private readonly ICrossChainContractProvider _crossChainContractProvider;

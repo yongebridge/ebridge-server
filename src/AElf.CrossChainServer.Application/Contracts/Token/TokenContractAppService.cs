@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
 using AElf.Types;
 using Microsoft.Extensions.Options;
+using Volo.Abp;
 
 namespace AElf.CrossChainServer.Contracts.Token;
 
+[RemoteService(IsEnabled = false)]
 public class TokenContractAppService: CrossChainServerAppService,ITokenContractAppService
 {
     private readonly ITokenContractProvider _tokenContractProvider;
