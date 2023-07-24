@@ -9,6 +9,9 @@ public class BridgeContractSyncOptions
     /// ChainId -> Token Dic
     /// </summary>
     public Dictionary<string, Dictionary<TransferType, List<TokenInfo>>> Tokens { get; set; } = new();
+    
+    public string ConfirmedSyncKeyPrefix { get; set; } = "Confirmed";
+    public int ConfirmedSyncDelayHeight { get; set; } = 2000;
 }
 
 public class TokenInfo

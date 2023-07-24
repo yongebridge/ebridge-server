@@ -25,7 +25,6 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
     public ILogger<IndexerSyncProviderBase> Logger { get; set; }
 
     private const int MaxRequestCount = 1000;
-    private const int SyncDelayLimit = 100;
 
     protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, ISettingManager settingManager,
         IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService, IChainAppService chainAppService)
@@ -38,15 +37,16 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         Logger = NullLogger<IndexerSyncProviderBase>.Instance;
     }
 
-    public async Task ExecuteAsync(string chainId)
+    public async Task ExecuteAsync(string chainId, int syncDelayHeight = 0, string typePrefix = null)
     {
-        var syncHeight = await GetSyncHeightAsync(chainId);
+        var syncHeight = await GetSyncHeightAsync(chainId, typePrefix);
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
-        var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight- SyncDelayLimit);
+        var endHeight = Math.Min(syncHeight + MaxRequestCount, currentIndexHeight - syncDelayHeight);
         var chain = await ChainAppService.GetAsync(chainId);
-        var height = await HandleDataAsync(ChainHelper.ConvertChainIdToBase58(chain.AElfChainId), syncHeight+1, endHeight);
-        
-        await SetSyncHeightAsync(chainId, height);
+        var height = await HandleDataAsync(ChainHelper.ConvertChainIdToBase58(chain.AElfChainId), syncHeight + 1,
+            endHeight);
+
+        await SetSyncHeightAsync(chainId, typePrefix, height);
     }
 
     protected async Task<T> QueryDataAsync<T>(GraphQLRequest request)
@@ -67,18 +67,23 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         return await IndexerAppService.GetLatestIndexHeightAsync(chainId);
     }
 
-    private async Task<long> GetSyncHeightAsync(string chainId)
+    private async Task<long> GetSyncHeightAsync(string chainId, string typePrefix)
     {
-        var setting = await SettingManager.GetOrNullAsync(chainId, SyncType);
+        var settingKey = GetSettingKey(typePrefix);
+        var setting = await SettingManager.GetOrNullAsync(chainId, settingKey);
         return setting == null ? 0 : long.Parse(setting);
     }
 
-    private async Task SetSyncHeightAsync(string chainId, long height)
+    private async Task SetSyncHeightAsync(string chainId, string typePrefix, long height)
     {
-        await SettingManager.SetAsync(chainId, SyncType, height.ToString());
+        var settingKey = GetSettingKey(typePrefix);
+        await SettingManager.SetAsync(chainId, settingKey, height.ToString());
     }
     
-    
+    private string GetSettingKey(string typePrefix)
+    {
+        return string.IsNullOrWhiteSpace(typePrefix)? SyncType : $"{typePrefix}-{SyncType}";
+    }
 
     protected abstract string SyncType { get; }
 

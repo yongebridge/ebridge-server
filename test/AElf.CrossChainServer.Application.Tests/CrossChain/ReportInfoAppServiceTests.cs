@@ -63,4 +63,24 @@ public class ReportInfoAppServiceTests : CrossChainServerApplicationTestBase
         reports[0].LastUpdateHeight.ShouldBe(150);
         reports[0].Step.ShouldBe(ReportStep.Confirmed);
     }
+
+    [Fact]
+    public async Task Create_Repeat_Test()
+    {
+        var input = new CreateReportInfoInput
+        {
+            ChainId = "MainChain_AELF",
+            Token = "Token",
+            ReceiptHash = "ReceiptHash",
+            ReceiptId = "ReceiptId",
+            RoundId = 1,
+            LastUpdateHeight = 100,
+            TargetChainId = "SideChain_tDVV"
+        };
+        await _reportInfoAppService.CreateAsync(input);
+        await _reportInfoAppService.CreateAsync(input);
+
+        var reports = await _reportInfoRepository.GetListAsync();
+        reports.Count.ShouldBe(1);
+    }
 }
