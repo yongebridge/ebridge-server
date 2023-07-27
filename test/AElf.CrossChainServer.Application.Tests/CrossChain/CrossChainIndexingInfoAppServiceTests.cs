@@ -326,4 +326,23 @@ public class CrossChainIndexingInfoAppServiceTests: CrossChainServerApplicationT
         list.Count.ShouldBe(1);
         list[0].IndexBlockHeight.ShouldBe(62);
     }
+
+    [Fact]
+    public async Task Create_Repeat_Test()
+    {
+        var input = new CreateCrossChainIndexingInfoInput
+        {
+            ChainId = "MainChain_AELF",
+            BlockHeight = 99000,
+            BlockTime = DateTime.UtcNow.AddMinutes(-5),
+            IndexBlockHeight = 60,
+            IndexChainId = "SideChain_tDVV"
+        };
+        
+        await _crossChainIndexingInfoAppService.CreateAsync(input);
+        await _crossChainIndexingInfoAppService.CreateAsync(input);
+        
+        var list = await _crossChainIndexingInfoRepository.GetListAsync();
+        list.Count.ShouldBe(1);
+    }
 }

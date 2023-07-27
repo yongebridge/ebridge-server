@@ -10,6 +10,7 @@ using AElf.CrossChainServer.Indexer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
+using Volo.Abp.Domain.Repositories;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -43,6 +44,13 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
 
     public async Task CreateAsync(CreateReportInfoInput input)
     {
+        if (await _reportInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == input.ChainId && o.RoundId == input.RoundId && o.Token == input.Token &&
+                o.TargetChainId == input.TargetChainId) != null)
+        {
+            return;
+        }
+
         var info = ObjectMapper.Map<CreateReportInfoInput, ReportInfo>(input);
         info.Step = ReportStep.Proposed;
         await _reportInfoRepository.InsertAsync(info);
