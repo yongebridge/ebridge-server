@@ -33,17 +33,15 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
             Type = BlockchainType.AElf
         });
 
-        var tasks =
+        var tasks = 
             chains.Items.Select(o => o.Id).SelectMany(chainId =>
-                _indexerSyncProviders.Select(async provider => await provider.ExecuteAsync(chainId)));
+            _indexerSyncProviders.Select(async provider => await provider.ExecuteAsync(chainId)));
 
-        await Task.WhenAll(tasks);
-
-        var confirmedTasks = chains.Items.Select(o => o.Id).SelectMany(chainId =>
+        tasks = tasks.Concat(chains.Items.Select(o => o.Id).SelectMany(chainId =>
             _indexerSyncProviders.Select(async provider => await provider.ExecuteAsync(chainId,
                 _bridgeContractSyncOptions.ConfirmedSyncDelayHeight,
-                _bridgeContractSyncOptions.ConfirmedSyncKeyPrefix)));
+                _bridgeContractSyncOptions.ConfirmedSyncKeyPrefix))));
 
-        await Task.WhenAll(confirmedTasks);
+        await Task.WhenAll(tasks);
     }
 }
