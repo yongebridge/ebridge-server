@@ -167,12 +167,22 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
             {
                 continue;
             }
+            
+            var existReport = await _reportInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == item.ChainId && o.Token == item.Token && o.TargetChainId == item.TargetChainId && o.ReceiptHash == item.ReceiptHash && o.ReceiptId == item.ReceiptId && o.Step == ReportStep.Transmitted );
+            if (existReport != null)
+            {
+                item.Step = ReportStep.ResendSucceeded;
+            }
+            else
+            {
+                var txId = await SendQueryTransactionAsync(item);
+                Logger.LogInformation("ReSend Query, Resending Report: {reportId}, Query Tx Id: {txId}", item.Id, txId);
 
-            var txId = await SendQueryTransactionAsync(item);
-            Logger.LogInformation("ReSend Query, Resending Report: {reportId}, Query Tx Id: {txId}", item.Id, txId);
+                item.QueryTransactionId = txId;
+                item.Step = ReportStep.Resending;
+            }
 
-            item.QueryTransactionId = txId;
-            item.Step = ReportStep.Resending;
             toUpdateReports.Add(item);
         }
 
