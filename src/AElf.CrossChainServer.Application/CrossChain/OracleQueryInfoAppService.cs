@@ -5,6 +5,7 @@ using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
 using Volo.Abp;
+using Volo.Abp.Domain.Repositories;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -23,6 +24,12 @@ public class OracleQueryInfoAppService : CrossChainServerAppService, IOracleQuer
 
     public async Task CreateAsync(CreateOracleQueryInfoInput input)
     {
+        if (await _oracleQueryInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == input.ChainId && o.QueryId == input.QueryId && o.Option == input.Option) != null)
+        {
+            return;
+        }
+
         var info = ObjectMapper.Map<CreateOracleQueryInfoInput, OracleQueryInfo>(input);
         await _oracleQueryInfoRepository.InsertAsync(info);
     }

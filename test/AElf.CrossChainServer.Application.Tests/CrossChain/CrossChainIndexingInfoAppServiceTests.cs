@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Shouldly;
+using Volo.Abp;
 using Xunit;
 
 namespace AElf.CrossChainServer.CrossChain;
@@ -73,7 +74,14 @@ public class CrossChainIndexingInfoAppServiceTests: CrossChainServerApplicationT
                 100);
         progress.ShouldBe(100);
     }
-    
+
+    [Fact]
+    public async Task Calculate_IsAELF_Test()
+    {
+        var exception = await Assert.ThrowsAsync<UserFriendlyException>(async () => await _crossChainIndexingInfoAppService.CalculateCrossChainProgressAsync("Ethereum", "SideChain_tDVV", 100));
+        exception.Message.ShouldContain("parameter chainId is not valid");
+    }
+
     [Fact]
     public async Task Homogeneous_MainToSide_Test()
     {
@@ -317,5 +325,24 @@ public class CrossChainIndexingInfoAppServiceTests: CrossChainServerApplicationT
         list = await _crossChainIndexingInfoRepository.GetListAsync();
         list.Count.ShouldBe(1);
         list[0].IndexBlockHeight.ShouldBe(62);
+    }
+
+    [Fact]
+    public async Task Create_Repeat_Test()
+    {
+        var input = new CreateCrossChainIndexingInfoInput
+        {
+            ChainId = "MainChain_AELF",
+            BlockHeight = 99000,
+            BlockTime = DateTime.UtcNow.AddMinutes(-5),
+            IndexBlockHeight = 60,
+            IndexChainId = "SideChain_tDVV"
+        };
+        
+        await _crossChainIndexingInfoAppService.CreateAsync(input);
+        await _crossChainIndexingInfoAppService.CreateAsync(input);
+        
+        var list = await _crossChainIndexingInfoRepository.GetListAsync();
+        list.Count.ShouldBe(1);
     }
 }

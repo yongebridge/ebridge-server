@@ -5,6 +5,7 @@ using AElf.CrossChainServer.Chains;
 using AElf.Indexing.Elasticsearch;
 using Nest;
 using Volo.Abp;
+using Volo.Abp.Domain.Repositories;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -29,6 +30,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
 
     public async Task CreateAsync(CreateCrossChainIndexingInfoInput input)
     {
+        if (await _crossChainIndexingInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == input.ChainId && o.IndexChainId == input.IndexChainId &&
+                o.IndexBlockHeight == input.IndexBlockHeight) != null)
+        {
+            return;
+        }
+
         var index = ObjectMapper.Map<CreateCrossChainIndexingInfoInput, CrossChainIndexingInfo>(input);
         await _crossChainIndexingInfoRepository.InsertAsync(index);
     }
@@ -51,6 +59,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
 
     public async Task<int> CalculateCrossChainProgressAsync(string fromChainId, string toChainId, long height)
     {
+        var fromChain = await _chainAppService.GetAsync(fromChainId);
+        var toChain = await _chainAppService.GetAsync(toChainId);
+        if (fromChain.Type != BlockchainType.AElf || toChain.Type != BlockchainType.AElf)
+        {
+            throw new UserFriendlyException("parameter chainId is not valid!");
+        }
+        
         var block = await _blockchainAppService.GetBlockByHeightAsync(fromChainId, height);
         return await CalculateCrossChainProgressAsync(fromChainId, toChainId, height, block.Header.Time);
     }
@@ -60,7 +75,7 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
     {
         var fromChain = await _chainAppService.GetAsync(fromChainId);
         var toChain = await _chainAppService.GetAsync(toChainId);
-        
+
         if (fromChain.IsMainChain)
         {
             return await CalculateAElfProgressAsync(fromChain, toChain, height, txTime);

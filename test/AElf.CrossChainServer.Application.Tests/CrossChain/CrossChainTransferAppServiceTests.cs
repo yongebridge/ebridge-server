@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Tokens;
 using Shouldly;
+using Volo.Abp.Validation;
 using Xunit;
 
 namespace AElf.CrossChainServer.CrossChain;
@@ -31,12 +33,12 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
     {
         var tokenTransfer = await _tokenAppService.GetAsync(new GetTokenInput
         {
-            ChainId ="MainChain_AELF",
+            ChainId = "MainChain_AELF",
             Symbol = "ELF"
         });
         var tokenReceived = await _tokenAppService.GetAsync(new GetTokenInput
         {
-            ChainId ="SideChain_tDVV",
+            ChainId = "SideChain_tDVV",
             Symbol = "ELF"
         });
 
@@ -80,7 +82,7 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         });
         status.Items.Count.ShouldBe(1);
         status.Items[0].Progress.ShouldBe(0);
-        
+
         await _crossChainIndexingInfoAppService.CreateAsync(new CreateCrossChainIndexingInfoInput
         {
             ChainId = "SideChain_tDVV",
@@ -100,12 +102,35 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         });
 
         await _crossChainTransferAppService.UpdateProgressAsync();
-        
+
+        var exception = await Assert.ThrowsAsync<AbpValidationException>(async () => await _crossChainTransferAppService.GetListAsync(new GetCrossChainTransfersInput
+        {
+            FromChainId = "FromChainId_FromChainId",
+            ToChainId = "ToChainId_ToChainId_ToChainId",
+            FromAddress = "FromAddress_FromAddress_FromAddress_FromAddress_FromAddress_FromAddress_FromAddress_FromAddress",
+            ToAddress = "ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress_ToAddress"
+        }));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("FromChainId")));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("ToChainId")));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("FromAddress")));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("ToAddress")));
+
         list = await _crossChainTransferAppService.GetListAsync(new GetCrossChainTransfersInput
         {
             MaxResultCount = 100
         });
         list.Items[0].Progress.ShouldBe(50);
+        
+        var guidList = new List<Guid>();
+        for (int i = 0; i < 11; i++)
+        {
+            guidList.Add(new Guid());
+        }
+        exception = await Assert.ThrowsAsync<AbpValidationException>(async () => await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
+        {
+            Ids = guidList
+        }));
+        exception.ValidationErrors.ShouldContain(err => err.MemberNames.Any(mem => mem.Contains("Ids")));
         
         status = await _crossChainTransferAppService.GetStatusAsync(new GetCrossChainTransferStatusInput
         {
@@ -650,5 +675,60 @@ public class CrossChainTransferAppServiceTests : CrossChainServerApplicationTest
         });
         list.TotalCount.ShouldBe(1);
         list.Items[0].Type.ShouldBe(CrossChainType.Heterogeneous);
+    }
+
+    [Fact]
+    public async Task Transfer_Repeat_Test()
+    {
+        var tokenTransfer = await _tokenAppService.GetAsync(new GetTokenInput
+        {
+            ChainId ="MainChain_AELF",
+            Symbol = "ELF"
+        });
+        
+        var input = new CrossChainTransferInput
+        {
+            TransferAmount = 100,
+            FromAddress = "FromAddress",
+            ToAddress = "ToAddress",
+            TransferTokenId = tokenTransfer.Id,
+            FromChainId = "MainChain_AELF",
+            ToChainId = "SideChain_tDVV",
+            TransferBlockHeight = 100,
+            TransferTime = DateTime.UtcNow.AddMinutes(-1),
+            TransferTransactionId = "TransferTransactionId"
+        };
+        await _crossChainTransferAppService.TransferAsync(input);
+        await _crossChainTransferAppService.TransferAsync(input);
+
+        var list = await _crossChainTransferRepository.GetListAsync();
+        list.Count.ShouldBe(1);
+    }
+    
+    [Fact]
+    public async Task Receive_Repeat_Test()
+    {
+        var tokenReceived = await _tokenAppService.GetAsync(new GetTokenInput
+        {
+            ChainId ="Ethereum",
+            Symbol = "ELF"
+        });
+        
+        var receiveInput = new CrossChainReceiveInput
+        {
+            ReceiveTime = DateTime.UtcNow,
+            FromChainId = "MainChain_AELF",
+            ToChainId = "Ethereum",
+            ReceiveTransactionId = "ReceiveTransactionId",
+            ReceiptId = "ReceiptId",
+            ReceiveAmount = 100,
+            ReceiveTokenId = tokenReceived.Id,
+            FromAddress = "FromAddress",
+            ToAddress = "ToAddress",
+        };
+        await _crossChainTransferAppService.ReceiveAsync(receiveInput);
+
+        var list = await _crossChainTransferRepository.GetListAsync();
+        list.Count.ShouldBe(1);
     }
 }
