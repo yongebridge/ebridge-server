@@ -49,6 +49,7 @@ public class CrossChainServerApplicationModule : AbpModule
         Configure<TokenContractOptions>(configuration.GetSection("TokenContract"));
         Configure<CrossChainContractOptions>(configuration.GetSection("CrossChainContract"));
         Configure<TokenSymbolMappingOptions>(configuration.GetSection("TokenSymbolMapping"));
+        Configure<CrossChainOptions>(configuration.GetSection("CrossChain"));
         
         context.Services.AddSingleton<IBlockchainClientFactory<AElfClient>, AElfClientFactory>();
         context.Services.AddSingleton<IBlockchainClientFactory<Nethereum.Web3.Web3>, EvmClientFactory>();
