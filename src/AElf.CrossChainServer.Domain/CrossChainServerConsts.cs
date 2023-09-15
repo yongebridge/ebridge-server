@@ -11,5 +11,5 @@ public static class CrossChainServerConsts
     public const int MaxReportQueryTimes = 10;
     public const int HalfOfTheProgress = 50;
     public const int FullOfTheProgress = 100;
-    public const int ReportTimeoutHeightThreshold = 1200; 
+    public const int ReportTimeoutHeightThreshold = 12000; 
 }

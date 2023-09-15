@@ -358,7 +358,7 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
             }
 
             page++;
-            crossChainTransfers = await GetToUpdateReceiveTransactionAsync(page);
+            crossChainTransfers = await GetToReceivedAsync(page);
         }
 
         if (toUpdate.Count > 0)
