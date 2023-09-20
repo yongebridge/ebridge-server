@@ -36,12 +36,14 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
         var tasks = 
             chains.Items.Select(o => o.Id).SelectMany(chainId =>
             _indexerSyncProviders.Select(async provider => await provider.ExecuteAsync(chainId, _bridgeContractSyncOptions.SyncDelayHeight)));
+        
+        await Task.WhenAll(tasks);
 
-        tasks = tasks.Concat(chains.Items.Select(o => o.Id).SelectMany(chainId =>
+        var confirmTasks = chains.Items.Select(o => o.Id).SelectMany(chainId =>
             _indexerSyncProviders.Select(async provider => await provider.ExecuteAsync(chainId,
                 _bridgeContractSyncOptions.ConfirmedSyncDelayHeight,
-                _bridgeContractSyncOptions.ConfirmedSyncKeyPrefix))));
+                _bridgeContractSyncOptions.ConfirmedSyncKeyPrefix)));
 
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(confirmTasks);
     }
 }
