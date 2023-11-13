@@ -6,6 +6,7 @@ using AElf.CrossChainServer.Contracts.CrossChain;
 using AElf.CrossChainServer.Contracts.Report;
 using AElf.CrossChainServer.Contracts.Token;
 using AElf.CrossChainServer.CrossChain;
+using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Account;
@@ -49,9 +50,14 @@ public class CrossChainServerApplicationModule : AbpModule
         Configure<TokenContractOptions>(configuration.GetSection("TokenContract"));
         Configure<CrossChainContractOptions>(configuration.GetSection("CrossChainContract"));
         Configure<TokenSymbolMappingOptions>(configuration.GetSection("TokenSymbolMapping"));
+        Configure<CrossChainOptions>(configuration.GetSection("CrossChain"));
+        Configure<CrossChainDailyLimitsOptions>(configuration.GetSection("DailyLimits"));
+        Configure<GraphQLClientOptions>(configuration.GetSection("GraphQLClients"));
+        Configure<EvmTokensOptions>(configuration.GetSection("EvmTokens"));
         
         context.Services.AddSingleton<IBlockchainClientFactory<AElfClient>, AElfClientFactory>();
         context.Services.AddSingleton<IBlockchainClientFactory<Nethereum.Web3.Web3>, EvmClientFactory>();
+        context.Services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
         context.Services.AddTransient<IBlockchainClientProvider, AElfClientProvider>();
         context.Services.AddTransient<IBlockchainClientProvider, EvmClientProvider>();
         

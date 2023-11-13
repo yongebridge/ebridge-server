@@ -120,11 +120,19 @@ public class BridgeContractAppService : CrossChainServerAppService, IBridgeContr
             originAmount, receiverAddress);
     }
 
-    public async Task<bool> IsTransferCanReceiveAsync(string chainId, string symbol, string amount)
+    public async Task<List<TokenBucketDto>> GetCurrentReceiptTokenBucketStatesAsync(string chainId, List<Guid> tokenIds,
+        List<string> targetChainIds)
     {
         var provider = await _bridgeContractProviderFactory.GetBridgeContractProviderAsync(chainId);
-        return await provider.IsTransferCanReceiveAsync(chainId,
-            _bridgeContractOptions.ContractAddresses[chainId].BridgeOutContract,
-            symbol, amount);
+        return await provider.GetCurrentReceiptTokenBucketStatesAsync(chainId,
+            _bridgeContractOptions.ContractAddresses[chainId].LimiterContract, tokenIds, targetChainIds);
+    }
+
+    public async Task<List<TokenBucketDto>> GetCurrentSwapTokenBucketStatesAsync(string chainId, List<Guid> tokenIds,
+        List<string> fromChainIds)
+    {
+        var provider = await _bridgeContractProviderFactory.GetBridgeContractProviderAsync(chainId);
+        return await provider.GetCurrentSwapTokenBucketStatesAsync(chainId,
+            _bridgeContractOptions.ContractAddresses[chainId].LimiterContract, tokenIds, fromChainIds);
     }
 }

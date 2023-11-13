@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
@@ -26,10 +25,10 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     private const int MaxRequestCount = 1000;
 
-    protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, ISettingManager settingManager,
+    protected IndexerSyncProviderBase(IGraphQLClientFactory graphQlClientFactory, ISettingManager settingManager,
         IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService, IChainAppService chainAppService)
     {
-        GraphQlClient = graphQlClient;
+        GraphQlClient = graphQlClientFactory.GetClient(GraphQLClientEnum.CrossChainServerClient);
         SettingManager = settingManager;
         JsonSerializer = jsonSerializer;
         IndexerAppService = indexerAppService;

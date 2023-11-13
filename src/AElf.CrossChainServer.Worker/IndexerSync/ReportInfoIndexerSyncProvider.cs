@@ -14,10 +14,10 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly IReportInfoAppService _reportInfoAppService;
 
-    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
+    public ReportInfoIndexerSyncProvider(IGraphQLClientFactory graphQlClientFactory, ISettingManager settingManager,
         IChainAppService chainAppService,IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService,
         IReportInfoAppService reportInfoAppService) : base(
-        graphQlClient, settingManager,jsonSerializer,indexerAppService,chainAppService)
+        graphQlClientFactory, settingManager,jsonSerializer,indexerAppService,chainAppService)
     {
         _reportInfoAppService = reportInfoAppService;
     }

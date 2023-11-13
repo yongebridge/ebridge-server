@@ -64,6 +64,15 @@ public class CrossChainServerApplicationTestModule : AbpModule
             {
                 { "WETH", "ETH" }
             };
-        }); 
+        });
+
+        Configure<GraphQLClientOptions>(o =>
+        {
+            o.Mapping = new Dictionary<string, string>
+            {
+                { "CrossChainServerClient", "http://192.168.67.84:8083/AElfIndexer_DApp/CrossChainServerIndexerCASchema/graphql" },
+                { "CrossChainClient", "http://192.168.67.84:8083/AElfIndexer_DApp/CrossChainIndexerCASchema/graphql" }
+            };
+        });
     }
 }
