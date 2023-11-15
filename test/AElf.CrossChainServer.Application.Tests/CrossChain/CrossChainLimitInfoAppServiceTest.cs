@@ -16,7 +16,6 @@ public class CrossChainLimitInfoAppServiceTest
 {
     private readonly ILogger<CrossChainLimitInfoAppService> _mockLogger;
     private readonly CrossChainLimitInfoAppService _service;
-    private readonly IOptionsMonitor<CrossChainDailyLimitsOptions> _mockChainDailyLimitsOptionsMonitor;
     private readonly IObjectMapper _mockObjectMapper;
     private readonly IIndexerCrossChainLimitInfoService _mockIndexerCrossChainLimitInfoService;
     private readonly IBridgeContractAppService _mockBridgeContractAppService;
@@ -27,7 +26,6 @@ public class CrossChainLimitInfoAppServiceTest
     public CrossChainLimitInfoAppServiceTest()
     {
         _mockLogger = Substitute.For<ILogger<CrossChainLimitInfoAppService>>();
-        _mockChainDailyLimitsOptionsMonitor = Substitute.For<IOptionsMonitor<CrossChainDailyLimitsOptions>>();
         _mockObjectMapper = Substitute.For<IObjectMapper>();
         _mockIndexerCrossChainLimitInfoService = Substitute.For<IIndexerCrossChainLimitInfoService>();
         _mockBridgeContractAppService = Substitute.For<IBridgeContractAppService>();
@@ -37,8 +35,6 @@ public class CrossChainLimitInfoAppServiceTest
 
         _service = new CrossChainLimitInfoAppService(
             _mockLogger,
-            _mockChainDailyLimitsOptionsMonitor,
-            _mockObjectMapper,
             _mockIndexerCrossChainLimitInfoService,
             _mockBridgeContractAppService,
             _mockEvmTokensOptions,
@@ -51,26 +47,11 @@ public class CrossChainLimitInfoAppServiceTest
     public async void GetCrossChainDailyLimitsAsyncTest()
     {
         // Arrange
-        var dailyLimitsOptions = new CrossChainDailyLimitsOptions
-        {
-            DailyLimitList = new List<CrossChainDailyLimit>
-            {
-                new() { Token = "ELF", Allowance = 1099 },
-                new() { Token = "BTC", Allowance = 12 },
-            }
-        };
-
-        _mockChainDailyLimitsOptionsMonitor.CurrentValue.Returns(dailyLimitsOptions);
         var expectedDtoList = new List<CrossChainDailyLimitsDto>
         {
             new() { Token = "ELF", Allowance = 1099 },
             new() { Token = "BTC", Allowance = 12 },
-        };
-
-        _mockObjectMapper
-            .Map<List<CrossChainDailyLimit>, List<CrossChainDailyLimitsDto>>(Arg.Any<List<CrossChainDailyLimit>>())
-            .Returns(expectedDtoList);
-
+        }; 
         // Act
         var result = await _service.GetCrossChainDailyLimitsAsync();
 

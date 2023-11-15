@@ -53,6 +53,5 @@ public class CrossChainServerApplicationAutoMapperProfile : Profile
         CreateMap<CrossChainTransferEto, UpdateCrossChainTransferIndexInput>();
 
         CreateMap<BridgeContractSyncInfo, BridgeContractSyncInfoDto>();
-        CreateMap<CrossChainDailyLimit, CrossChainDailyLimitsDto>();
     }
 }

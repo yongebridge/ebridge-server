@@ -9,7 +9,6 @@ using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
-using Volo.Abp.ObjectMapping;
 using Volo.Abp.Application.Dtos;
 
 namespace AElf.CrossChainServer.CrossChain;
@@ -18,8 +17,6 @@ namespace AElf.CrossChainServer.CrossChain;
 public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossChainLimitInfoAppService
 {
     private readonly ILogger<CrossChainLimitInfoAppService> _logger;
-    private readonly IOptionsMonitor<CrossChainDailyLimitsOptions> _chainDailyLimitsOptionsMonitor;
-    private readonly IObjectMapper _objectMapper;
     private readonly IIndexerCrossChainLimitInfoService _indexerCrossChainLimitInfoService;
     private readonly IBridgeContractAppService _bridgeContractAppService;
     private readonly IOptionsMonitor<EvmTokensOptions> _evmTokensOptions;
@@ -29,16 +26,12 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
 
     public CrossChainLimitInfoAppService(
         ILogger<CrossChainLimitInfoAppService> logger,
-        IOptionsMonitor<CrossChainDailyLimitsOptions> chainDailyLimitsOptionsMonitor,
-        IObjectMapper objectMapper,
         IIndexerCrossChainLimitInfoService indexerCrossChainLimitInfoService,
         IBridgeContractAppService bridgeContractAppService,
         IOptionsMonitor<EvmTokensOptions> evmTokensOptions, ITokenAppService tokenAppService,
         IChainAppService chainAppService)
     {
         _logger = logger;
-        _chainDailyLimitsOptionsMonitor = chainDailyLimitsOptionsMonitor;
-        _objectMapper = objectMapper;
         _indexerCrossChainLimitInfoService = indexerCrossChainLimitInfoService;
         _bridgeContractAppService = bridgeContractAppService;
         _evmTokensOptions = evmTokensOptions;
@@ -48,13 +41,38 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
 
     public async Task<ListResultDto<CrossChainDailyLimitsDto>> GetCrossChainDailyLimitsAsync()
     {
-        var dailyLimits = _chainDailyLimitsOptionsMonitor.CurrentValue.DailyLimitList;
+        var indexerCrossChainLimitInfos =
+            await _indexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync();
+
+        var dailyLimits = new Dictionary<string, CrossChainDailyLimitsDto>();
+
+        foreach (var info in indexerCrossChainLimitInfos)
+        {
+            if (info.ToChainId != BlockchainType.AElf.ToString().ToUpper() 
+                || dailyLimits.ContainsKey(info.Symbol))
+            {
+                //avoid repeated get
+                continue;
+            }
+            var token = await _tokenAppService.GetAsync(new GetTokenInput
+            {
+                ChainId = info.ToChainId,
+                Symbol = info.Symbol
+            });
+            var limitsDto = new CrossChainDailyLimitsDto
+            {
+                Token = info.Symbol,
+                Allowance = info.DefaultDailyLimit / (decimal)Math.Pow(10, token.Decimals)
+            };
+            dailyLimits.Add(info.Symbol, limitsDto);
+        }
+
         return new ListResultDto<CrossChainDailyLimitsDto>
         {
-            Items = _objectMapper.Map<List<CrossChainDailyLimit>, List<CrossChainDailyLimitsDto>>(dailyLimits)
+            Items = dailyLimits.Values.ToList()
         };
     }
-
+    
     public async Task<ListResultDto<CrossChainRateLimitsDto>> GetCrossChainRateLimitsAsync()
     {
         var result = new List<CrossChainRateLimitsDto>();
