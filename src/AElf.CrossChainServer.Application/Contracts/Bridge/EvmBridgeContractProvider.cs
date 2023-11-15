@@ -201,8 +201,9 @@ public class EvmBridgeContractProvider : EvmClientProvider, IBridgeContractProvi
                     Token = tokenAddress,
                     TargetChainId = targetChainIds
                 });
-
-        return GetReceiptTokenBuckets(receiptTokenBucket, tokenDecimals);
+        var tokenBuckets = receiptTokenBucket.TokenBuckets.Select((t, i) =>
+            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDecimals[i])).ToList();
+        return tokenBuckets;
     }
 
     public async Task<List<TokenBucketDto>> GetCurrentSwapTokenBucketStatesAsync(string chainId, string contractAddress,
@@ -226,57 +227,21 @@ public class EvmBridgeContractProvider : EvmClientProvider, IBridgeContractProvi
                     Token = tokenAddress,
                     FromChainId = fromChainIds
                 });
-        return GetSwapTokenBuckets(swapTokenBucket, tokenDecimals);
+        var tokenBuckets = swapTokenBucket.SwapTokenBuckets.Select((t, i) =>
+            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDecimals[i])).ToList();
+        return tokenBuckets;
     }
 
-    private List<TokenBucketDto> GetReceiptTokenBuckets(ReceiptTokenBucketsDto receiptTokenBucketsDto,
-        List<int> tokenDecimals)
+    private TokenBucketDto GetTokenBuckets(BigInteger capacity, BigInteger rate, int tokenDecimal)
     {
-        var result = new List<TokenBucketDto>();
-        for (var i = 0; i < receiptTokenBucketsDto.TokenBuckets.Count; i++)
+        var tokenCapacity = (decimal)(new BigDecimal(capacity) / BigInteger.Pow(10, tokenDecimal));
+        var refillRate = (decimal)(new BigDecimal(rate) / BigInteger.Pow(10, tokenDecimal));
+        var maximumTimeConsumed = (int)Math.Ceiling(tokenCapacity / refillRate / 60);
+        return new TokenBucketDto
         {
-            var bucket = receiptTokenBucketsDto.TokenBuckets[i];
-            if (bucket.TokenCapacity == 0 || bucket.Rate == 0)
-            {
-                continue;
-            }
-
-            var tokenCapacity = (decimal)(new BigDecimal(bucket.TokenCapacity) / BigInteger.Pow(10, tokenDecimals[i]));
-            var refillRate = (decimal)(new BigDecimal(bucket.Rate) / BigInteger.Pow(10, tokenDecimals[i]));
-            var maximumTimeConsumed = (int)Math.Ceiling(tokenCapacity / refillRate / 60);
-            result.Add(new TokenBucketDto
-            {
-                Capacity = tokenCapacity,
-                RefillRate = refillRate,
-                MaximumTimeConsumed = maximumTimeConsumed
-            });
-        }
-
-        return result;
-    }
-
-    private List<TokenBucketDto> GetSwapTokenBuckets(SwapTokenBucketsDto swapTokenBucketsDto, List<int> tokenDecimals)
-    {
-        var result = new List<TokenBucketDto>();
-        for (var i = 0; i < swapTokenBucketsDto.SwapTokenBuckets.Count; i++)
-        {
-            var bucket = swapTokenBucketsDto.SwapTokenBuckets[i];
-            if (bucket.TokenCapacity == 0 || bucket.Rate == 0)
-            {
-                continue;
-            }
-
-            var tokenCapacity = (decimal)(new BigDecimal(bucket.TokenCapacity) / BigInteger.Pow(10, tokenDecimals[i]));
-            var refillRate = (decimal)(new BigDecimal(bucket.Rate) / BigInteger.Pow(10, tokenDecimals[i]));
-            var maximumTimeConsumed = (int)Math.Ceiling(tokenCapacity / refillRate / 60);
-            result.Add(new TokenBucketDto
-            {
-                Capacity = tokenCapacity,
-                RefillRate = refillRate,
-                MaximumTimeConsumed = maximumTimeConsumed
-            });
-        }
-
-        return result;
+            Capacity = tokenCapacity,
+            RefillRate = refillRate,
+            MaximumTimeConsumed = maximumTimeConsumed
+        };
     }
 }
