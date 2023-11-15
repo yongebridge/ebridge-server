@@ -334,7 +334,12 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                 try
                 {
                     var toChain = await _chainAppService.GetAsync(transfer.ToChainId);
-                    if (toChain.Type != BlockchainType.AElf && !await _checkTransferProvider.CheckTransferAsync(
+                    if (toChain.Type != BlockchainType.AElf)
+                    {
+                        continue;
+                    }
+                    // Check limit.
+                    if (!await _checkTransferProvider.CheckTransferAsync(
                             transfer.FromChainId,
                             transfer.ToChainId, transfer.TransferTokenId, transfer.TransferAmount))
                     {

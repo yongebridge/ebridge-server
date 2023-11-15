@@ -164,28 +164,23 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                 ChainId = chainId,
                 Symbol = pair.Key
             });
-            if (pair.Value.Capacity != 0 && pair.Value.RefillRate != 0)
+            var capacity = (decimal)pair.Value.Capacity;
+            var refillRate = (decimal)pair.Value.RefillRate;
+            var time = 0;
+            if (capacity != 0 && refillRate != 0)
             {
-                var capacity = pair.Value.Capacity / (decimal)Math.Pow(10, token.Decimals);
-                var refillRate = pair.Value.RefillRate / (decimal)Math.Pow(10, token.Decimals);
-                var time = (int)Math.Ceiling(capacity / refillRate / 60);
-                result.Add(new RateLimitInfo
-                {
-                    Token = pair.Key,
-                    Capacity = capacity,
-                    RefillRate = refillRate,
-                    MaximumTimeConsumed = time
-                });
+                capacity = capacity / (decimal)Math.Pow(10, token.Decimals);
+                refillRate = refillRate / (decimal)Math.Pow(10, token.Decimals);
+                time = (int)Math.Ceiling(capacity / refillRate / 60);
+                
             }
-            else
+            result.Add(new RateLimitInfo
             {
-                result.Add(new RateLimitInfo
-                {
-                    Token = pair.Key,
-                    Capacity = pair.Value.Capacity,
-                    RefillRate = pair.Value.RefillRate
-                });
-            }
+                Token = pair.Key,
+                Capacity = capacity,
+                RefillRate = refillRate,
+                MaximumTimeConsumed = time
+            });
         }
 
         return result;
