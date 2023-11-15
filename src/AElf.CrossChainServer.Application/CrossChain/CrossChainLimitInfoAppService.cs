@@ -45,18 +45,26 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             await _indexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync();
 
         var dailyLimits = new Dictionary<string, CrossChainDailyLimitsDto>();
-
+        string convertedToChainId = null;
         foreach (var info in indexerCrossChainLimitInfos)
         {
-            if (info.ToChainId != BlockchainType.AElf.ToString().ToUpper() 
+            if (info.ToChainId != BlockchainType.AElf.ToString().ToUpper()
                 || dailyLimits.ContainsKey(info.Symbol))
             {
                 //avoid repeated get
                 continue;
             }
+
+            if (convertedToChainId.IsNullOrEmpty())
+            {
+                var chain = await _chainAppService.GetByAElfChainIdAsync(
+                    ChainHelper.ConvertBase58ToChainId(info.ToChainId));
+                convertedToChainId = chain.Id;
+            }
+
             var token = await _tokenAppService.GetAsync(new GetTokenInput
             {
-                ChainId = info.ToChainId,
+                ChainId = convertedToChainId,
                 Symbol = info.Symbol
             });
             var limitsDto = new CrossChainDailyLimitsDto
