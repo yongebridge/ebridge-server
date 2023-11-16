@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts;
 using AElf.CrossChainServer.Indexer;
@@ -47,16 +48,25 @@ public class CrossChainLimitInfoAppServiceTest
     public async void GetCrossChainDailyLimitsAsyncTest()
     {
         // Arrange
-        var expectedDtoList = new List<CrossChainDailyLimitsDto>
-        {
-            new() { Token = "ELF", Allowance = 1099 },
-            new() { Token = "BTC", Allowance = 12 },
-        }; 
+        var expectedDtoList = MockIndexerCrossChainLimitInfos();
+        
+        _mockIndexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync()
+            .Returns(MockIndexerCrossChainLimitInfos());
+        
+        MockChainAppService();
+        
+        MockTokenAppService();
+        
         // Act
         var result = await _service.GetCrossChainDailyLimitsAsync();
 
-        Assert.Equal(expectedDtoList.Count, result.Items.Count);
-    }
+        Assert.Equal(expectedDtoList.Count, result.Items.Count * 2);
+
+        var elfToken = result.Items.Where(r => r.Token.Equals("ELF")).Select(r => r.Allowance).FirstOrDefault();
+        
+        Assert.Equal(elfToken,  new decimal(0.10000002));
+
+    }   
 
 
     [Fact]
@@ -193,14 +203,14 @@ public class CrossChainLimitInfoAppServiceTest
             .GetAsync(Arg.Is<GetTokenInput>(input => "AElf,Evm".Contains(input.ChainId) && input.Symbol == "ELF"))
             .Returns(new TokenDto
             {
-                Symbol = "ELF", Id = new Guid()
+                Symbol = "ELF", Id = new Guid(), Decimals = 8
             });
 
         _mockTokenAppService
             .GetAsync(Arg.Is<GetTokenInput>(input => "AElf,Evm".Contains(input.ChainId) && input.Symbol == "BTC"))
             .Returns(new TokenDto
             {
-                Symbol = "BTC", Id = new Guid()
+                Symbol = "BTC", Id = new Guid(), Decimals = 8
             });
     }
 
