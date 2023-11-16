@@ -329,6 +329,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         var crossChainTransfers = await GetToReceivedAsync(page);
         while (crossChainTransfers.Count != 0)
         {
+            var idList = crossChainTransfers.Select(T => T.Id).ToList();
+            Logger.LogInformation("Start to auto receive transfer id:{idList}",idList);
             foreach (var transfer in crossChainTransfers)
             {
                 try
@@ -338,14 +340,15 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                     {
                         continue;
                     }
-                    // Check limit.
-                    if (!await _checkTransferProvider.CheckTransferAsync(
+                    // Heterogeneous:check limit.
+                    if (transfer.Type == CrossChainType.Heterogeneous &&
+                        !await _checkTransferProvider.CheckTransferAsync(
                             transfer.FromChainId,
                             transfer.ToChainId, transfer.TransferTokenId, transfer.TransferAmount))
                     {
                         Logger.LogInformation(
-                            "Incorrect chain or check limit failed, from chain:{fromChain}, to chain:{toChain}, Id: {transferId}",
-                            transfer.FromChainId, toChain, transfer.Id);
+                            "Incorrect chain or check limit failed, from chain:{fromChain}, to chain:{toChain}, Id: {transferId}, transfer amount:{amount}",
+                            transfer.FromChainId, transfer.ToChainId, transfer.Id, transfer.TransferAmount);
                         continue;
                     }
 
