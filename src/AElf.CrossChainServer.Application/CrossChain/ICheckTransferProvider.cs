@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Nethereum.Util;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -35,9 +37,10 @@ public class CheckTransferProvider : ICheckTransferProvider
         decimal transferAmount)
     {
         var transferToken = await _tokenRepository.GetAsync(tokenId);
+        var amount = (new BigDecimal(transferAmount)) * BigInteger.Pow(10, transferToken.Decimals);
         Logger.LogInformation(
             "Start to check limit. From chain:{fromChainId}, to chain:{toChainId}, token symbol:{symbol}, transfer amount:{amount}",
-            fromChainId, toChainId, transferToken.Symbol, transferAmount);
+            fromChainId, toChainId, transferToken.Symbol, amount);
 
         var chain = await _chainAppService.GetAsync(toChainId);
         toChainId = ChainHelper.ConvertChainIdToBase58(chain.AElfChainId);
@@ -57,6 +60,6 @@ public class CheckTransferProvider : ICheckTransferProvider
             "Limit info,daily limit:{dailyLimit},capacity:{capacity},bucketUpdateTime:{time},rate:{rate},rate limit:{limit}.",
             limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.BucketUpdateTime, limitInfo.RefillRate, rateLimit);
 
-        return transferAmount <= limitInfo.CurrentDailyLimit && transferAmount <= rateLimit;
+        return amount <= new BigDecimal(limitInfo.CurrentDailyLimit) && amount <= new BigDecimal(rateLimit);
     }
 }
