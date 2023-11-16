@@ -39,17 +39,16 @@ public class CheckTransferProvider : ICheckTransferProvider
     public async Task<bool> CheckTransferAsync(string fromChainId, string toChainId, Guid tokenId,
         decimal transferAmount)
     {
-        var transferToken = await _tokenAppService.GetAsync(tokenId);
-        var amount = await GetTokenAmountAsync(fromChainId, toChainId, transferToken.Symbol, transferAmount);
+        var (amount,symbol) = await GetTokenInfoAsync(fromChainId, toChainId, tokenId, transferAmount);
         Logger.LogInformation(
             "Start to check limit. From chain:{fromChainId}, to chain:{toChainId}, token symbol:{symbol}, transfer amount:{amount}",
-            fromChainId, toChainId, transferToken.Symbol, amount);
+            fromChainId, toChainId, symbol, amount);
 
         var chain = await _chainAppService.GetAsync(toChainId);
         toChainId = ChainHelper.ConvertChainIdToBase58(chain.AElfChainId);
         var limitInfo =
             (await _indexerCrossChainLimitInfoService.GetCrossChainLimitInfoIndexAsync(fromChainId, toChainId,
-                transferToken.Symbol)).FirstOrDefault();
+                symbol)).FirstOrDefault();
         if (limitInfo == null)
         {
             Logger.LogInformation("No limit info.");
@@ -72,16 +71,17 @@ public class CheckTransferProvider : ICheckTransferProvider
         return amount <= limitInfo.CurrentDailyLimit && amount <= (decimal)rateLimit;
     }
 
-    private async Task<decimal> GetTokenAmountAsync(string fromChainId, string toChainId, string transferTokenSymbol,
+    private async Task<(decimal,string)> GetTokenInfoAsync(string fromChainId, string toChainId, Guid tokenId,
         decimal transferAmount)
     {
+        var transferToken = await _tokenAppService.GetAsync(tokenId);
         var symbol =
-            _tokenSymbolMappingProvider.GetMappingSymbol(fromChainId, toChainId, transferTokenSymbol);
+            _tokenSymbolMappingProvider.GetMappingSymbol(fromChainId, toChainId, transferToken.Symbol);
         var token = await _tokenAppService.GetAsync(new GetTokenInput
         {
             ChainId = toChainId,
             Symbol = symbol
         });
-        return transferAmount * (decimal)Math.Pow(10, token.Decimals);
+        return (transferAmount * (decimal)Math.Pow(10, token.Decimals),symbol);
     }
 }
