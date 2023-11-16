@@ -18,26 +18,29 @@ public interface ICheckTransferProvider
 
 public class CheckTransferProvider : ICheckTransferProvider
 {
-    private readonly ITokenRepository _tokenRepository;
     private readonly IIndexerCrossChainLimitInfoService _indexerCrossChainLimitInfoService;
     private readonly IChainAppService _chainAppService;
+    private readonly ITokenAppService _tokenAppService;
+    private readonly ITokenSymbolMappingProvider _tokenSymbolMappingProvider;
     public ILogger<CheckTransferProvider> Logger { get; set; }
 
 
-    public CheckTransferProvider(ITokenRepository tokenRepository,
-        IIndexerCrossChainLimitInfoService indexerCrossChainLimitInfoService, IChainAppService chainAppService)
+    public CheckTransferProvider(
+        IIndexerCrossChainLimitInfoService indexerCrossChainLimitInfoService, IChainAppService chainAppService,
+        ITokenAppService tokenAppService, ITokenSymbolMappingProvider tokenSymbolMappingProvider)
     {
-        _tokenRepository = tokenRepository;
         _indexerCrossChainLimitInfoService = indexerCrossChainLimitInfoService;
         _chainAppService = chainAppService;
+        _tokenAppService = tokenAppService;
+        _tokenSymbolMappingProvider = tokenSymbolMappingProvider;
         Logger = NullLogger<CheckTransferProvider>.Instance;
     }
 
     public async Task<bool> CheckTransferAsync(string fromChainId, string toChainId, Guid tokenId,
         decimal transferAmount)
     {
-        var transferToken = await _tokenRepository.GetAsync(tokenId);
-        var amount = (new BigDecimal(transferAmount)) * BigInteger.Pow(10, transferToken.Decimals);
+        var transferToken = await _tokenAppService.GetAsync(tokenId);
+        var amount = await GetTokenAmountAsync(fromChainId, toChainId, transferToken.Symbol, transferAmount);
         Logger.LogInformation(
             "Start to check limit. From chain:{fromChainId}, to chain:{toChainId}, token symbol:{symbol}, transfer amount:{amount}",
             fromChainId, toChainId, transferToken.Symbol, amount);
@@ -58,8 +61,22 @@ public class CheckTransferProvider : ICheckTransferProvider
             (DateTime.UtcNow - limitInfo.BucketUpdateTime).Seconds * limitInfo.RefillRate);
         Logger.LogInformation(
             "Limit info,daily limit:{dailyLimit},capacity:{capacity},bucketUpdateTime:{time},rate:{rate},rate limit:{limit}.",
-            limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.BucketUpdateTime, limitInfo.RefillRate, rateLimit);
+            limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.BucketUpdateTime, limitInfo.RefillRate,
+            rateLimit);
 
-        return amount <= new BigDecimal(limitInfo.CurrentDailyLimit) && amount <= new BigDecimal(rateLimit);
+        return amount <= limitInfo.CurrentDailyLimit && amount <= rateLimit;
+    }
+
+    private async Task<decimal> GetTokenAmountAsync(string fromChainId, string toChainId, string transferTokenSymbol,
+        decimal transferAmount)
+    {
+        var symbol =
+            _tokenSymbolMappingProvider.GetMappingSymbol(fromChainId, toChainId, transferTokenSymbol);
+        var token = await _tokenAppService.GetAsync(new GetTokenInput
+        {
+            ChainId = toChainId,
+            Symbol = symbol
+        });
+        return transferAmount * (decimal)Math.Pow(10, token.Decimals);
     }
 }
