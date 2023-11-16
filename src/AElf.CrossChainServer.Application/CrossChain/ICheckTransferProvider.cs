@@ -56,13 +56,13 @@ public class CheckTransferProvider : ICheckTransferProvider
             return true;
         }
 
+        var time = DateTime.UtcNow;
         var rateLimit = Math.Min(limitInfo.Capacity,
-            limitInfo.CurrentBucketTokenAmount +
-            (DateTime.UtcNow - limitInfo.BucketUpdateTime).Seconds * limitInfo.RefillRate);
+            limitInfo.CurrentBucketTokenAmount + (time - limitInfo.BucketUpdateTime).Seconds * limitInfo.RefillRate);
         Logger.LogInformation(
-            "Limit info,daily limit:{dailyLimit},capacity:{capacity},bucketUpdateTime:{time},rate:{rate},rate limit:{limit}.",
-            limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.BucketUpdateTime, limitInfo.RefillRate,
-            rateLimit);
+            "Limit info,daily limit:{dailyLimit},capacity:{capacity},current bucket amount:{currentBucket},bucketUpdateTime:{time},rate:{rate},now:{time},time diff:{dif},rate limit:{limit}.",
+            limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.CurrentBucketTokenAmount,
+            limitInfo.BucketUpdateTime, limitInfo.RefillRate, time, (time - limitInfo.BucketUpdateTime).Seconds, rateLimit);
 
         return amount <= limitInfo.CurrentDailyLimit && amount <= rateLimit;
     }

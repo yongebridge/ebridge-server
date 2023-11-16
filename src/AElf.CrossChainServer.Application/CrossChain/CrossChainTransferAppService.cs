@@ -268,11 +268,14 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         {
             foreach (var transfer in crossChainTransfers)
             {
+                Logger.LogInformation("UpdateReceiveTransaction.Transfer id:{id}",transfer.Id);
                 try
                 {
                     var txResult =
                         await _blockchainAppService.GetTransactionResultAsync(transfer.ToChainId,
                             transfer.ReceiveTransactionId);
+                    Logger.LogInformation("txResult.Transfer id:{id},is failed:{isFailed}",transfer.Id,txResult.IsFailed);
+
                     if (txResult.IsFailed)
                     {
                         transfer.ReceiveTransactionId = null;
