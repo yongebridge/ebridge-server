@@ -55,12 +55,17 @@ public class CheckTransferProvider : ICheckTransferProvider
             Logger.LogInformation("No limit info.");
             return true;
         }
-
         var time = DateTime.UtcNow;
+        if ((time - limitInfo.RefreshTime).Seconds >= CrossChainServerConsts.DefaultDailyLimitRefreshTime)
+        {
+            Logger.LogInformation("Daily limit refresh.");
+            limitInfo.CurrentDailyLimit = limitInfo.DefaultDailyLimit;
+        }
+
         var rateLimit = Math.Min(limitInfo.Capacity,
             limitInfo.CurrentBucketTokenAmount + (time - limitInfo.BucketUpdateTime).Seconds * limitInfo.RefillRate);
         Logger.LogInformation(
-            "Limit info,daily limit:{dailyLimit},capacity:{capacity},current bucket amount:{currentBucket},bucketUpdateTime:{time},rate:{rate},now:{time},time diff:{dif},rate limit:{limit}.",
+            "Limit info,daily limit:{dailyLimit},capacity:{capacity},current bucket amount:{currentBucket},bucketUpdateTime:{bucketUpdateTime},rate:{rate},now:{timeNow},time diff:{dif},rate limit:{limit}.",
             limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.CurrentBucketTokenAmount,
             limitInfo.BucketUpdateTime, limitInfo.RefillRate, time, (time - limitInfo.BucketUpdateTime).Seconds, rateLimit);
 
