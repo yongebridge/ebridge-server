@@ -340,6 +340,8 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
                     {
                         continue;
                     }
+                    Logger.LogInformation("Start to auto receive transfer id:{id}",transfer.Id);
+                    
                     // Heterogeneous:check limit.
                     if (transfer.Type == CrossChainType.Heterogeneous &&
                         !await _checkTransferProvider.CheckTransferAsync(
