@@ -56,20 +56,20 @@ public class CheckTransferProvider : ICheckTransferProvider
             return true;
         }
         var time = DateTime.UtcNow;
-        if ((time - limitInfo.RefreshTime).Seconds >= CrossChainServerConsts.DefaultDailyLimitRefreshTime)
+        if (time.Subtract(limitInfo.RefreshTime).TotalSeconds >= CrossChainServerConsts.DefaultDailyLimitRefreshTime)
         {
             Logger.LogInformation("Daily limit refresh.");
             limitInfo.CurrentDailyLimit = limitInfo.DefaultDailyLimit;
         }
 
         var rateLimit = Math.Min(limitInfo.Capacity,
-            limitInfo.CurrentBucketTokenAmount + (time - limitInfo.BucketUpdateTime).Seconds * limitInfo.RefillRate);
+            limitInfo.CurrentBucketTokenAmount + time.Subtract(limitInfo.BucketUpdateTime).TotalSeconds * limitInfo.RefillRate);
         Logger.LogInformation(
             "Limit info,daily limit:{dailyLimit},capacity:{capacity},current bucket amount:{currentBucket},bucketUpdateTime:{bucketUpdateTime},rate:{rate},now:{timeNow},time diff:{dif},rate limit:{limit}.",
             limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.CurrentBucketTokenAmount,
             limitInfo.BucketUpdateTime, limitInfo.RefillRate, time, (time - limitInfo.BucketUpdateTime).Seconds, rateLimit);
 
-        return amount <= limitInfo.CurrentDailyLimit && amount <= rateLimit;
+        return amount <= limitInfo.CurrentDailyLimit && amount <= (decimal)rateLimit;
     }
 
     private async Task<decimal> GetTokenAmountAsync(string fromChainId, string toChainId, string transferTokenSymbol,
