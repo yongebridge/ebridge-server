@@ -329,8 +329,6 @@ public class CrossChainTransferAppService : CrossChainServerAppService, ICrossCh
         var crossChainTransfers = await GetToReceivedAsync(page);
         while (crossChainTransfers.Count != 0)
         {
-            var idList = crossChainTransfers.Select(T => T.Id).ToList();
-            Logger.LogInformation("Start to auto receive transfer id:{idList}",idList);
             foreach (var transfer in crossChainTransfers)
             {
                 try
