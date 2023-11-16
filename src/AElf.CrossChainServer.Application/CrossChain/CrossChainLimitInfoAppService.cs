@@ -22,14 +22,15 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
     private readonly IOptionsMonitor<EvmTokensOptions> _evmTokensOptions;
     private readonly ITokenAppService _tokenAppService;
     private readonly IChainAppService _chainAppService;
-
-
+    private readonly IOptionsMonitor<ChainDailyLimitsOptions> _chainDailyLimitsOptions;
+    
     public CrossChainLimitInfoAppService(
         ILogger<CrossChainLimitInfoAppService> logger,
         IIndexerCrossChainLimitInfoService indexerCrossChainLimitInfoService,
         IBridgeContractAppService bridgeContractAppService,
         IOptionsMonitor<EvmTokensOptions> evmTokensOptions, ITokenAppService tokenAppService,
-        IChainAppService chainAppService)
+        IChainAppService chainAppService,
+        IOptionsMonitor<ChainDailyLimitsOptions> chainDailyLimitsOptions)
     {
         _logger = logger;
         _indexerCrossChainLimitInfoService = indexerCrossChainLimitInfoService;
@@ -37,39 +38,36 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         _evmTokensOptions = evmTokensOptions;
         _tokenAppService = tokenAppService;
         _chainAppService = chainAppService;
+        _chainDailyLimitsOptions = chainDailyLimitsOptions;
     }
 
     public async Task<ListResultDto<CrossChainDailyLimitsDto>> GetCrossChainDailyLimitsAsync()
     {
+        var chainIdInfo = _chainDailyLimitsOptions.CurrentValue.ChainIdInfo;
         var indexerCrossChainLimitInfos =
             await _indexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync();
-
+        //sort by config fromChainId first.
+        indexerCrossChainLimitInfos = indexerCrossChainLimitInfos
+            .OrderByDescending(item => item.FromChainId == chainIdInfo.TokenFirstChainId)
+            .ToList();
         var dailyLimits = new Dictionary<string, CrossChainDailyLimitsDto>();
-        string convertedToChainId = null;
+        var tokenDict = new Dictionary<string, TokenDto>();
         foreach (var info in indexerCrossChainLimitInfos)
         {
-            if (info.ToChainId != BlockchainType.AElf.ToString().ToUpper()
-                || dailyLimits.ContainsKey(info.Symbol))
+            if (info.ToChainId != chainIdInfo.ToChainId || dailyLimits.ContainsKey(info.Symbol))
             {
-                //avoid repeated get
                 continue;
             }
-
-            if (convertedToChainId.IsNullOrEmpty())
+            //avoid repeated get
+            var key = info.ToChainId + "_" + info.Symbol;
+            if (!tokenDict.TryGetValue(key, out var token))
             {
-                var chain = await _chainAppService.GetByAElfChainIdAsync(
-                    ChainHelper.ConvertBase58ToChainId(info.ToChainId));
-                convertedToChainId = chain.Id;
+                token = await GetTokenInfoAsync(info.ToChainId, info.Symbol);
+                tokenDict[key] = token;
             }
-
-            var token = await _tokenAppService.GetAsync(new GetTokenInput
-            {
-                ChainId = convertedToChainId,
-                Symbol = info.Symbol
-            });
             var limitsDto = new CrossChainDailyLimitsDto
             {
-                Token = info.Symbol,
+                Token = token.Symbol,
                 Allowance = info.DefaultDailyLimit / (decimal)Math.Pow(10, token.Decimals)
             };
             dailyLimits.Add(info.Symbol, limitsDto);
@@ -363,6 +361,19 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             }
         }
     }
+    private async Task<TokenDto> GetTokenInfoAsync(string chainId, string symbol)
+    {
+        var chain = await _chainAppService.GetByAElfChainIdAsync(
+            ChainHelper.ConvertBase58ToChainId(chainId));
+        var convertedChainId = chain.Id;
+
+        return await _tokenAppService.GetAsync(new GetTokenInput
+        {
+            ChainId = convertedChainId,
+            Symbol = symbol
+        });
+    }
+
 }
 
 public class CrossChainLimitKey

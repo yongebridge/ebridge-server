@@ -23,6 +23,7 @@ public class CrossChainLimitInfoAppServiceTest
     private readonly IOptionsMonitor<EvmTokensOptions> _mockEvmTokensOptions;
     private readonly ITokenAppService _mockTokenAppService;
     private readonly IChainAppService _mockChainAppService;
+    private readonly IOptionsMonitor<ChainDailyLimitsOptions> _mockChainDailyLimitsOptions;
 
     public CrossChainLimitInfoAppServiceTest()
     {
@@ -33,6 +34,7 @@ public class CrossChainLimitInfoAppServiceTest
         _mockEvmTokensOptions = Substitute.For<IOptionsMonitor<EvmTokensOptions>>();
         _mockTokenAppService = Substitute.For<ITokenAppService>();
         _mockChainAppService = Substitute.For<IChainAppService>();
+        _mockChainDailyLimitsOptions = Substitute.For<IOptionsMonitor<ChainDailyLimitsOptions>>();
 
         _service = new CrossChainLimitInfoAppService(
             _mockLogger,
@@ -40,7 +42,8 @@ public class CrossChainLimitInfoAppServiceTest
             _mockBridgeContractAppService,
             _mockEvmTokensOptions,
             _mockTokenAppService,
-            _mockChainAppService
+            _mockChainAppService,
+            _mockChainDailyLimitsOptions
         );
     }
 
@@ -53,6 +56,8 @@ public class CrossChainLimitInfoAppServiceTest
         _mockIndexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync()
             .Returns(MockIndexerCrossChainLimitInfos());
         
+        _mockChainDailyLimitsOptions.CurrentValue.Returns(MockEthChainIdsOptions());
+        
         MockChainAppService();
         
         MockTokenAppService();
@@ -60,11 +65,11 @@ public class CrossChainLimitInfoAppServiceTest
         // Act
         var result = await _service.GetCrossChainDailyLimitsAsync();
 
-        Assert.Equal(expectedDtoList.Count, result.Items.Count * 2);
+        Assert.Equal(expectedDtoList.Count, result.Items.Count * 3);
 
         var elfToken = result.Items.Where(r => r.Token.Equals("ELF")).Select(r => r.Allowance).FirstOrDefault();
         
-        Assert.Equal(elfToken,  new decimal(0.10000002));
+        Assert.Equal(elfToken,  new decimal(0.10000004));
 
     }   
 
@@ -92,6 +97,20 @@ public class CrossChainLimitInfoAppServiceTest
         Assert.Equal(crossChainLimitInfos.Count, result.Items.Count * 2);
     }
 
+    
+    private ChainDailyLimitsOptions MockEthChainIdsOptions()
+    {
+        var evmTokensOptions = new ChainDailyLimitsOptions
+        {
+            ChainIdInfo = new ChainIdInfo
+            {
+                TokenFirstChainId = "Sepolia",
+                ToChainId = "AELF"
+            }
+        };
+        return evmTokensOptions;
+    }
+    
     private EvmTokensOptions MockEvmTokensOptions()
     {
         var evmTokensOptions = new EvmTokensOptions
@@ -120,7 +139,7 @@ public class CrossChainLimitInfoAppServiceTest
     private List<IndexerCrossChainLimitInfo> MockIndexerCrossChainLimitInfos()
     {
         var crossChainLimitInfos = new List<IndexerCrossChainLimitInfo>();
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 6; i++)
         {
             string _from = "";
             string _to = "";
@@ -148,6 +167,21 @@ public class CrossChainLimitInfoAppServiceTest
             else if (i == 3)
             {
                 _from = "Evm";
+                _to = "AELF";
+                _symbol = "BTC";
+                _limitType = CrossChainLimitType.Swap;
+            }
+            
+            else if (i == 4)
+            {
+                _from = "Sepolia";
+                _to = "AELF";
+                _symbol = "ELF";
+                _limitType = CrossChainLimitType.Swap;
+            }
+            else if (i == 5)
+            {
+                _from = "Sepolia";
                 _to = "AELF";
                 _symbol = "BTC";
                 _limitType = CrossChainLimitType.Swap;
@@ -183,7 +217,7 @@ public class CrossChainLimitInfoAppServiceTest
                 Type = BlockchainType.AElf
             });
 
-        _mockChainAppService.GetAsync(Arg.Is<string>(s => s == "Evm"))
+        _mockChainAppService.GetAsync(Arg.Is<string>(s =>  "Evm, Sepolia".Contains(s)))
             .Returns(new ChainDto
             {
                 Type = BlockchainType.Evm
