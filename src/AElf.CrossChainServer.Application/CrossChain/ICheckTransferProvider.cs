@@ -46,12 +46,17 @@ public class CheckTransferProvider : ICheckTransferProvider
                 transferToken.Symbol)).FirstOrDefault();
         if (limitInfo == null)
         {
+            Logger.LogInformation("No limit info.");
             return true;
         }
 
         var rateLimit = Math.Min(limitInfo.Capacity,
             limitInfo.CurrentBucketTokenAmount +
             (DateTime.UtcNow - limitInfo.BucketUpdateTime).Seconds * limitInfo.RefillRate);
+        Logger.LogInformation(
+            "Limit info,daily limit:{dailyLimit},capacity:{capacity},bucketUpdateTime:{time},rate:{rate},rate limit:{limit}.",
+            limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.BucketUpdateTime, limitInfo.RefillRate, rateLimit);
+
         return transferAmount <= limitInfo.CurrentDailyLimit && transferAmount <= rateLimit;
     }
 }
