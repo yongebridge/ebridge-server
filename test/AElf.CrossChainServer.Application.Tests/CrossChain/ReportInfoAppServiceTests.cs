@@ -83,4 +83,36 @@ public class ReportInfoAppServiceTests : CrossChainServerApplicationTestBase
         var reports = await _reportInfoRepository.GetListAsync();
         reports.Count.ShouldBe(1);
     }
+    
+    [Fact]
+    public async Task Create_ResentTimes_Test()
+    {
+        var input1 = new CreateReportInfoInput
+        {
+            ChainId = "MainChain_AELF",
+            Token = "Token",
+            ReceiptHash = "ReceiptHash",
+            ReceiptId = "ReceiptId",
+            RoundId = 1,
+            LastUpdateHeight = 100,
+            TargetChainId = "SideChain_tDVV"
+        };
+        await _reportInfoAppService.CreateAsync(input1);
+        var input2 = new CreateReportInfoInput
+        {
+            ChainId = "MainChain_AELF",
+            Token = "Token",
+            ReceiptHash = "ReceiptHash",
+            ReceiptId = "ReceiptId",
+            RoundId = 2,
+            LastUpdateHeight = 100,
+            TargetChainId = "SideChain_tDVV"
+        };
+        await _reportInfoAppService.CreateAsync(input2);
+
+        var reports = await _reportInfoRepository.GetListAsync();
+        reports.Count.ShouldBe(2);
+        reports[0].ResendTimes.ShouldBe(0);
+        reports[1].ResendTimes.ShouldBe(1);
+    }
 }

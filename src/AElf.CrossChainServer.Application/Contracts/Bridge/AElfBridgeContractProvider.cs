@@ -91,25 +91,15 @@ public class AElfBridgeContractProvider: AElfClientProvider, IBridgeContractProv
 
         return result.TransactionId;
     }
-    public async Task<bool> IsTransferCanReceiveAsync(string chainId, string contractAddress, string symbol, string amount)
-    {
-        var client = BlockchainClientFactory.GetClient(chainId);
 
-        var param = new IsTransferCanReceiveInput
-        {
-            Amount = amount,
-            Symbol = symbol
-        };
-        var transaction =
-            await client.GenerateTransactionAsync(client.GetAddressFromPrivateKey(GetPrivateKey(chainId)), contractAddress,
-                "IsTransferCanReceive", param);
-        var txWithSign = client.SignTransaction(GetPrivateKey(chainId), transaction);
-        var transactionResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
-        {
-            RawTransaction = txWithSign.ToByteArray().ToHex()
-        });
-        var result = BitConverter.ToBoolean(ByteArrayHelper.HexStringToByteArray(transactionResult));
-        return result;
+    public Task<List<TokenBucketDto>> GetCurrentReceiptTokenBucketStatesAsync(string chainId, string contractAddress, List<Guid> tokenIds,
+        List<string> targetChainIds)
+    {
+        throw new NotImplementedException();
     }
-    
+
+    public Task<List<TokenBucketDto>> GetCurrentSwapTokenBucketStatesAsync(string chainId, string contractAddress, List<Guid> tokenIds, List<string> fromChainIds)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
-using AElf.Indexing.Elasticsearch.Options;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -15,9 +14,9 @@ public class IndexerAppService: CrossChainServerAppService, IIndexerAppService
     private readonly IGraphQLClient _graphQlClient;
     private readonly IChainAppService _chainAppService;
 
-    public IndexerAppService(IGraphQLClient graphQlClient, IChainAppService chainAppService)
+    public IndexerAppService(IGraphQLClientFactory graphQlClientFactory, IChainAppService chainAppService)
     {
-        _graphQlClient = graphQlClient;
+        _graphQlClient = graphQlClientFactory.GetClient(GraphQLClientEnum.CrossChainServerClient);
         _chainAppService = chainAppService;
     }
 

@@ -1,44 +1,87 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
-using AElf.CrossChainServer.Contracts;
+using AElf.CrossChainServer.Indexer;
 using AElf.CrossChainServer.Tokens;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Nethereum.Util;
 
 namespace AElf.CrossChainServer.CrossChain;
 
 public interface ICheckTransferProvider
 {
-    Task<bool> CheckTransferAsync(string chainId, Guid tokenId,decimal transferAmount);
+    Task<bool> CheckTransferAsync(string fromChainId, string toChainId, Guid tokenId, decimal transferAmount);
 }
 
 public class CheckTransferProvider : ICheckTransferProvider
 {
-    private readonly ITokenRepository _tokenRepository;
-    private readonly IBridgeContractAppService _bridgeContractAppService;
+    private readonly IIndexerCrossChainLimitInfoService _indexerCrossChainLimitInfoService;
     private readonly IChainAppService _chainAppService;
+    private readonly ITokenAppService _tokenAppService;
+    private readonly ITokenSymbolMappingProvider _tokenSymbolMappingProvider;
+    public ILogger<CheckTransferProvider> Logger { get; set; }
 
-    public CheckTransferProvider(ITokenRepository tokenRepository, 
-        IBridgeContractAppService bridgeContractAppService, IChainAppService chainAppService)
+
+    public CheckTransferProvider(
+        IIndexerCrossChainLimitInfoService indexerCrossChainLimitInfoService, IChainAppService chainAppService,
+        ITokenAppService tokenAppService, ITokenSymbolMappingProvider tokenSymbolMappingProvider)
     {
-        _tokenRepository = tokenRepository;
-        _bridgeContractAppService = bridgeContractAppService;
+        _indexerCrossChainLimitInfoService = indexerCrossChainLimitInfoService;
         _chainAppService = chainAppService;
+        _tokenAppService = tokenAppService;
+        _tokenSymbolMappingProvider = tokenSymbolMappingProvider;
+        Logger = NullLogger<CheckTransferProvider>.Instance;
     }
-    
-    public async Task<bool> CheckTransferAsync(string chainId, Guid tokenId, decimal transferAmount)
+
+    public async Task<bool> CheckTransferAsync(string fromChainId, string toChainId, Guid tokenId,
+        decimal transferAmount)
     {
-        var chain = await _chainAppService.GetAsync(chainId);
-        if (chain.Type != BlockchainType.AElf)
+        var (amount,symbol) = await GetTokenInfoAsync(fromChainId, toChainId, tokenId, transferAmount);
+        Logger.LogInformation(
+            "Start to check limit. From chain:{fromChainId}, to chain:{toChainId}, token symbol:{symbol}, transfer amount:{amount}",
+            fromChainId, toChainId, symbol, amount);
+
+        var chain = await _chainAppService.GetAsync(toChainId);
+        toChainId = ChainHelper.ConvertChainIdToBase58(chain.AElfChainId);
+        var limitInfo =
+            (await _indexerCrossChainLimitInfoService.GetCrossChainLimitInfoIndexAsync(fromChainId, toChainId,
+                symbol)).FirstOrDefault();
+        if (limitInfo == null)
         {
+            Logger.LogInformation("No limit info.");
             return true;
         }
+        var time = DateTime.UtcNow;
+        if (time.Subtract(limitInfo.RefreshTime).TotalSeconds >= CrossChainServerConsts.DefaultDailyLimitRefreshTime)
+        {
+            Logger.LogInformation("Daily limit refresh.");
+            limitInfo.CurrentDailyLimit = limitInfo.DefaultDailyLimit;
+        }
+        var timeDiff = time.Subtract(limitInfo.BucketUpdateTime).TotalSeconds;
+        var rateLimit = Math.Min(limitInfo.Capacity,
+            limitInfo.CurrentBucketTokenAmount + timeDiff * limitInfo.RefillRate);
+        Logger.LogInformation(
+            "Limit info,daily limit:{dailyLimit},capacity:{capacity},current bucket amount:{currentBucket},bucketUpdateTime:{bucketUpdateTime},rate:{rate},now:{timeNow},time diff:{dif},rate limit:{limit}.",
+            limitInfo.CurrentDailyLimit, limitInfo.Capacity, limitInfo.CurrentBucketTokenAmount,
+            limitInfo.BucketUpdateTime, limitInfo.RefillRate, time, timeDiff, rateLimit);
 
-        var transferToken = await _tokenRepository.GetAsync(tokenId);
-        var amount = (new BigDecimal(transferAmount)) * BigInteger.Pow(10, transferToken.Decimals); 
-        return
-            await _bridgeContractAppService.IsTransferCanReceiveAsync(chainId, transferToken.Symbol, amount.ToString());
+        return amount <= limitInfo.CurrentDailyLimit && amount <= (decimal)rateLimit;
+    }
 
+    private async Task<(decimal,string)> GetTokenInfoAsync(string fromChainId, string toChainId, Guid tokenId,
+        decimal transferAmount)
+    {
+        var transferToken = await _tokenAppService.GetAsync(tokenId);
+        var symbol =
+            _tokenSymbolMappingProvider.GetMappingSymbol(fromChainId, toChainId, transferToken.Symbol);
+        var token = await _tokenAppService.GetAsync(new GetTokenInput
+        {
+            ChainId = toChainId,
+            Symbol = symbol
+        });
+        return (transferAmount * (decimal)Math.Pow(10, token.Decimals),symbol);
     }
 }
