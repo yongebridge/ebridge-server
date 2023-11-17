@@ -24,6 +24,8 @@ public class CrossChainLimitInfoAppServiceTest
     private readonly ITokenAppService _mockTokenAppService;
     private readonly IChainAppService _mockChainAppService;
     private readonly IOptionsMonitor<CrossChainLimitsOptions> _mockCrossChainLimitsOptions;
+    private readonly ITokenSymbolMappingProvider _mockTokenSymbolMappingProvider;
+
 
     public CrossChainLimitInfoAppServiceTest()
     {
@@ -35,6 +37,7 @@ public class CrossChainLimitInfoAppServiceTest
         _mockTokenAppService = Substitute.For<ITokenAppService>();
         _mockChainAppService = Substitute.For<IChainAppService>();
         _mockCrossChainLimitsOptions = Substitute.For<IOptionsMonitor<CrossChainLimitsOptions>>();
+        _mockTokenSymbolMappingProvider = Substitute.For<ITokenSymbolMappingProvider>();
 
         _service = new CrossChainLimitInfoAppService(
             _mockLogger,
@@ -43,7 +46,8 @@ public class CrossChainLimitInfoAppServiceTest
             _mockEvmTokensOptions,
             _mockTokenAppService,
             _mockChainAppService,
-            _mockCrossChainLimitsOptions
+            _mockCrossChainLimitsOptions,
+            _mockTokenSymbolMappingProvider
         );
     }
 
