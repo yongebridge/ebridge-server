@@ -105,6 +105,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                 {
                     swapRateLimits = OfEvmRateLimitInfos(value);
                 }
+
                 var aelfChainId = (await _chainAppService.GetAsync(crossChainLimitInfo.Key.FromChainId)).AElfChainId;
                 crossChainLimitInfo.Key.FromChainId = ChainHelper.ConvertChainIdToBase58(aelfChainId);
                 result.Add(new CrossChainRateLimitsDto
@@ -213,8 +214,8 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                 capacity = capacity / (decimal)Math.Pow(10, token.Decimals);
                 refillRate = refillRate / (decimal)Math.Pow(10, token.Decimals);
                 time = (int)Math.Ceiling(capacity / refillRate / 60);
-                
             }
+
             result.Add(new RateLimitInfo
             {
                 Token = pair.Key,
@@ -300,20 +301,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                     FromChainId = chainId,
                     ToChainId = targetChainIds[i]
                 };
-                var symbol =
-                    _tokenSymbolMappingProvider.GetMappingSymbol(limitKey.FromChainId, limitKey.ToChainId, symbols[i]);
-                var tokenDictionary = new Dictionary<string, TokenBucketDto>
-                {
-                    [symbol] = receiptTokenBucketDto[i]
-                };
-                if (result.ContainsKey(limitKey))
-                {
-                    result[limitKey] = result[limitKey].Concat(tokenDictionary).ToDictionary(k => k.Key, v => v.Value);
-                }
-                else
-                {
-                    result[limitKey] = tokenDictionary;
-                }
+                GetRateLimitsResult(ref result, limitKey, receiptTokenBucketDto[i], symbols[i]);
             }
         }
         catch (Exception e)
@@ -341,20 +329,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                     FromChainId = fromChainIds[i],
                     ToChainId = toChainId
                 };
-                var symbol =
-                    _tokenSymbolMappingProvider.GetMappingSymbol(limitKey.ToChainId, limitKey.FromChainId, symbols[i]);
-                var tokenDictionary = new Dictionary<string, TokenBucketDto>
-                {
-                    [symbol] = swapTokenBucketDto[i]
-                };
-                if (result.ContainsKey(limitKey))
-                {
-                    result[limitKey] = result[limitKey].Concat(tokenDictionary).ToDictionary(k => k.Key, v => v.Value);
-                }
-                else
-                {
-                    result[limitKey] = tokenDictionary;
-                }
+                GetRateLimitsResult(ref result, limitKey, swapTokenBucketDto[i], symbols[i]);
             }
         }
         catch (Exception e)
@@ -365,6 +340,24 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         }
 
         return result;
+    }
+
+    private void GetRateLimitsResult(ref Dictionary<CrossChainLimitKey, Dictionary<string, TokenBucketDto>> result, CrossChainLimitKey limitKey, TokenBucketDto tokenBucket, string symbol)
+    {
+        symbol =
+            _tokenSymbolMappingProvider.GetMappingSymbol(limitKey.ToChainId, limitKey.FromChainId, symbol);
+        var tokenDictionary = new Dictionary<string, TokenBucketDto>
+        {
+            [symbol] = tokenBucket
+        };
+        if (result.ContainsKey(limitKey))
+        {
+            result[limitKey] = result[limitKey].Concat(tokenDictionary).ToDictionary(k => k.Key, v => v.Value);
+        }
+        else
+        {
+            result[limitKey] = tokenDictionary;
+        }
     }
 
     private void ConcatRateLimits(ref Dictionary<CrossChainLimitKey, Dictionary<string, TokenBucketDto>> result,
@@ -382,6 +375,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             }
         }
     }
+
     private async Task<TokenDto> GetTokenInfoAsync(string chainId, string symbol)
     {
         var chain = await _chainAppService.GetByAElfChainIdAsync(
