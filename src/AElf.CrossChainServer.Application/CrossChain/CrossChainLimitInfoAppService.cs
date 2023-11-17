@@ -22,7 +22,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
     private readonly IOptionsMonitor<EvmTokensOptions> _evmTokensOptions;
     private readonly ITokenAppService _tokenAppService;
     private readonly IChainAppService _chainAppService;
-    private readonly IOptionsMonitor<ChainDailyLimitsOptions> _chainDailyLimitsOptions;
+    private readonly IOptionsMonitor<CrossChainLimitsOptions> _crossChainLimitsOptions;
     
     public CrossChainLimitInfoAppService(
         ILogger<CrossChainLimitInfoAppService> logger,
@@ -30,7 +30,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         IBridgeContractAppService bridgeContractAppService,
         IOptionsMonitor<EvmTokensOptions> evmTokensOptions, ITokenAppService tokenAppService,
         IChainAppService chainAppService,
-        IOptionsMonitor<ChainDailyLimitsOptions> chainDailyLimitsOptions)
+        IOptionsMonitor<CrossChainLimitsOptions> crossChainLimitsOptions)
     {
         _logger = logger;
         _indexerCrossChainLimitInfoService = indexerCrossChainLimitInfoService;
@@ -38,12 +38,13 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         _evmTokensOptions = evmTokensOptions;
         _tokenAppService = tokenAppService;
         _chainAppService = chainAppService;
-        _chainDailyLimitsOptions = chainDailyLimitsOptions;
+        _crossChainLimitsOptions = crossChainLimitsOptions;
     }
 
     public async Task<ListResultDto<CrossChainDailyLimitsDto>> GetCrossChainDailyLimitsAsync()
     {
-        var chainIdInfo = _chainDailyLimitsOptions.CurrentValue.ChainIdInfo;
+        var crossChainLimits = _crossChainLimitsOptions.CurrentValue;
+        var chainIdInfo = crossChainLimits.ChainIdInfo;
         var indexerCrossChainLimitInfos =
             await _indexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync();
         //sort by config fromChainId first.
@@ -73,9 +74,12 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             dailyLimits.Add(info.Symbol, limitsDto);
         }
 
+        //add token sort logic
+        var resultList = dailyLimits.Values.ToList().OrderBy(item => crossChainLimits.GetTokenSortWeight(item.Token))
+            .ToList();
         return new ListResultDto<CrossChainDailyLimitsDto>
         {
-            Items = dailyLimits.Values.ToList()
+            Items = resultList
         };
     }
     
@@ -133,16 +137,22 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         {
             Items = result
         };
+        
     }
 
     private async Task<Dictionary<CrossChainLimitKey, Dictionary<string, IndexerCrossChainLimitInfo>>>
         GetCrossChainLimitInfosAsync()
     {
+        var crossChainLimits = _crossChainLimitsOptions.CurrentValue;
         var crossChainLimitInfoDictionary =
             new Dictionary<CrossChainLimitKey, Dictionary<string, IndexerCrossChainLimitInfo>>();
         var indexerCrossChainLimitInfos =
             await _indexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync();
-        foreach (var item in indexerCrossChainLimitInfos)
+        var crossChainLimitInfos = indexerCrossChainLimitInfos
+            .OrderBy(item => crossChainLimits.GetChainSortWeight(item.FromChainId, item.ToChainId))
+            .ThenBy(item => crossChainLimits.GetTokenSortWeight(item.Symbol))
+            .ToList();
+        foreach (var item in crossChainLimitInfos)
         {
             _logger.LogInformation(
                 "Start to get limit info. From chain:{fromChainId}, to chain:{toChainId}, symbol:{symbol}",
@@ -373,7 +383,6 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             Symbol = symbol
         });
     }
-
 }
 
 public class CrossChainLimitKey

@@ -23,7 +23,7 @@ public class CrossChainLimitInfoAppServiceTest
     private readonly IOptionsMonitor<EvmTokensOptions> _mockEvmTokensOptions;
     private readonly ITokenAppService _mockTokenAppService;
     private readonly IChainAppService _mockChainAppService;
-    private readonly IOptionsMonitor<ChainDailyLimitsOptions> _mockChainDailyLimitsOptions;
+    private readonly IOptionsMonitor<CrossChainLimitsOptions> _mockCrossChainLimitsOptions;
 
     public CrossChainLimitInfoAppServiceTest()
     {
@@ -34,7 +34,7 @@ public class CrossChainLimitInfoAppServiceTest
         _mockEvmTokensOptions = Substitute.For<IOptionsMonitor<EvmTokensOptions>>();
         _mockTokenAppService = Substitute.For<ITokenAppService>();
         _mockChainAppService = Substitute.For<IChainAppService>();
-        _mockChainDailyLimitsOptions = Substitute.For<IOptionsMonitor<ChainDailyLimitsOptions>>();
+        _mockCrossChainLimitsOptions = Substitute.For<IOptionsMonitor<CrossChainLimitsOptions>>();
 
         _service = new CrossChainLimitInfoAppService(
             _mockLogger,
@@ -43,7 +43,7 @@ public class CrossChainLimitInfoAppServiceTest
             _mockEvmTokensOptions,
             _mockTokenAppService,
             _mockChainAppService,
-            _mockChainDailyLimitsOptions
+            _mockCrossChainLimitsOptions
         );
     }
 
@@ -56,7 +56,7 @@ public class CrossChainLimitInfoAppServiceTest
         _mockIndexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync()
             .Returns(MockIndexerCrossChainLimitInfos());
         
-        _mockChainDailyLimitsOptions.CurrentValue.Returns(MockEthChainIdsOptions());
+        _mockCrossChainLimitsOptions.CurrentValue.Returns(MockEthChainIdsOptions());
         
         MockChainAppService();
         
@@ -69,8 +69,11 @@ public class CrossChainLimitInfoAppServiceTest
 
         var elfToken = result.Items.Where(r => r.Token.Equals("ELF")).Select(r => r.Allowance).FirstOrDefault();
         
-        Assert.Equal(elfToken,  new decimal(0.10000004));
-
+        Assert.Equal(new decimal(0.10000004), elfToken);
+        
+        var firstToken = result.Items.Select(r => r.Token).FirstOrDefault();
+        
+        Assert.Equal("BTC", firstToken);
     }   
 
 
@@ -82,6 +85,8 @@ public class CrossChainLimitInfoAppServiceTest
         _mockIndexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync()
             .Returns(MockIndexerCrossChainLimitInfos());
 
+        _mockCrossChainLimitsOptions.CurrentValue.Returns(MockEthChainIdsOptions());
+        
         _mockEvmTokensOptions.CurrentValue.Returns(MockEvmTokensOptions());
 
         MockChainAppService();
@@ -98,14 +103,28 @@ public class CrossChainLimitInfoAppServiceTest
     }
 
     
-    private ChainDailyLimitsOptions MockEthChainIdsOptions()
+    private CrossChainLimitsOptions MockEthChainIdsOptions()
     {
-        var evmTokensOptions = new ChainDailyLimitsOptions
+        var evmTokensOptions = new CrossChainLimitsOptions
         {
             ChainIdInfo = new ChainIdInfo
             {
                 TokenFirstChainId = "Sepolia",
                 ToChainId = "AELF"
+            },
+            
+            TokenSortRules = new Dictionary<string, int>()
+            {
+                {"BTC", 0},
+                {"ELF", 1},
+                {"USDT", 2},
+                {"USDC", 3}
+            },
+            
+            ChainSortRules = new Dictionary<string, int>()
+            {
+                {"Sepolia-AELF", 0},
+                {"Evm-ALELF", 1}
             }
         };
         return evmTokensOptions;
