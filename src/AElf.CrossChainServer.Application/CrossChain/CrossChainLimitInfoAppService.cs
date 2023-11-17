@@ -23,14 +23,16 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
     private readonly ITokenAppService _tokenAppService;
     private readonly IChainAppService _chainAppService;
     private readonly IOptionsMonitor<CrossChainLimitsOptions> _crossChainLimitsOptions;
-    
+    private readonly ITokenSymbolMappingProvider _tokenSymbolMappingProvider;
+
     public CrossChainLimitInfoAppService(
         ILogger<CrossChainLimitInfoAppService> logger,
         IIndexerCrossChainLimitInfoService indexerCrossChainLimitInfoService,
         IBridgeContractAppService bridgeContractAppService,
         IOptionsMonitor<EvmTokensOptions> evmTokensOptions, ITokenAppService tokenAppService,
         IChainAppService chainAppService,
-        IOptionsMonitor<CrossChainLimitsOptions> crossChainLimitsOptions)
+        IOptionsMonitor<CrossChainLimitsOptions> crossChainLimitsOptions, 
+        ITokenSymbolMappingProvider tokenSymbolMappingProvider)
     {
         _logger = logger;
         _indexerCrossChainLimitInfoService = indexerCrossChainLimitInfoService;
@@ -39,6 +41,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         _tokenAppService = tokenAppService;
         _chainAppService = chainAppService;
         _crossChainLimitsOptions = crossChainLimitsOptions;
+        _tokenSymbolMappingProvider = tokenSymbolMappingProvider;
     }
 
     public async Task<ListResultDto<CrossChainDailyLimitsDto>> GetCrossChainDailyLimitsAsync()
@@ -356,14 +359,18 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         return result;
     }
 
-    private static void ConcatRateLimits(ref Dictionary<CrossChainLimitKey, Dictionary<string, TokenBucketDto>> result,
+    private void ConcatRateLimits(ref Dictionary<CrossChainLimitKey, Dictionary<string, TokenBucketDto>> result,
         Dictionary<CrossChainLimitKey, Dictionary<string, TokenBucketDto>> rateLimits)
     {
         foreach (var pair in rateLimits)
         {
             if (result.ContainsKey(pair.Key))
             {
-                result[pair.Key] = result[pair.Key].Concat(pair.Value).ToDictionary(k => k.Key, v => v.Value);
+                result[pair.Key] = result[pair.Key].Concat(pair.Value).ToDictionary(k =>
+                {
+                    var symbol = _tokenSymbolMappingProvider.GetMappingSymbol(pair.Key.FromChainId, pair.Key.ToChainId, k.Key);
+                    return symbol;
+                }, v => v.Value);
             }
             else
             {
