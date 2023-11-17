@@ -283,10 +283,6 @@ namespace AElf.CrossChainServer.Migrations
 
                     b.Property<string>("ReceiptId")
                         .HasColumnType("longtext");
-
-                    b.Property<int>("ResendTimes")
-                        .HasColumnType("int");
-
                     b.Property<long>("RoundId")
                         .HasColumnType("bigint");
 
