@@ -31,7 +31,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         IBridgeContractAppService bridgeContractAppService,
         IOptionsMonitor<EvmTokensOptions> evmTokensOptions, ITokenAppService tokenAppService,
         IChainAppService chainAppService,
-        IOptionsMonitor<CrossChainLimitsOptions> crossChainLimitsOptions, 
+        IOptionsMonitor<CrossChainLimitsOptions> crossChainLimitsOptions,
         ITokenSymbolMappingProvider tokenSymbolMappingProvider)
     {
         _logger = logger;
@@ -105,7 +105,8 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                 {
                     swapRateLimits = OfEvmRateLimitInfos(value);
                 }
-
+                var aelfChainId = (await _chainAppService.GetAsync(crossChainLimitInfo.Key.FromChainId)).AElfChainId;
+                crossChainLimitInfo.Key.FromChainId = ChainHelper.ConvertChainIdToBase58(aelfChainId);
                 result.Add(new CrossChainRateLimitsDto
                 {
                     FromChain = crossChainLimitInfo.Key.FromChainId,
@@ -118,14 +119,17 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             {
                 _logger.LogInformation("Limit data processing，From chain:{fromChainId}, to chain:{toChainId}",
                     crossChainLimitInfo.Key.FromChainId, crossChainLimitInfo.Key.ToChainId);
+                var swapRateLimits =
+                    await OfRateLimitInfos(crossChainLimitInfo.Value, crossChainLimitInfo.Key.ToChainId);
+                
                 var receiptRateLimits = new List<RateLimitInfo>();
                 if (evmLimitInfos.TryGetValue(crossChainLimitInfo.Key, out var value))
                 {
                     receiptRateLimits = OfEvmRateLimitInfos(value);
                 }
-
-                var swapRateLimits =
-                    await OfRateLimitInfos(crossChainLimitInfo.Value, crossChainLimitInfo.Key.ToChainId);
+                
+                var aelfChainId = (await _chainAppService.GetAsync(crossChainLimitInfo.Key.ToChainId)).AElfChainId;
+                crossChainLimitInfo.Key.ToChainId = ChainHelper.ConvertChainIdToBase58(aelfChainId);
                 result.Add(new CrossChainRateLimitsDto
                 {
                     FromChain = crossChainLimitInfo.Key.FromChainId,
@@ -296,9 +300,11 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                     FromChainId = chainId,
                     ToChainId = targetChainIds[i]
                 };
+                var symbol =
+                    _tokenSymbolMappingProvider.GetMappingSymbol(limitKey.FromChainId, limitKey.ToChainId, symbols[i]);
                 var tokenDictionary = new Dictionary<string, TokenBucketDto>
                 {
-                    [symbols[i]] = receiptTokenBucketDto[i]
+                    [symbol] = receiptTokenBucketDto[i]
                 };
                 if (result.ContainsKey(limitKey))
                 {
@@ -335,9 +341,11 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                     FromChainId = fromChainIds[i],
                     ToChainId = toChainId
                 };
+                var symbol =
+                    _tokenSymbolMappingProvider.GetMappingSymbol(limitKey.ToChainId, limitKey.FromChainId, symbols[i]);
                 var tokenDictionary = new Dictionary<string, TokenBucketDto>
                 {
-                    [symbols[i]] = swapTokenBucketDto[i]
+                    [symbol] = swapTokenBucketDto[i]
                 };
                 if (result.ContainsKey(limitKey))
                 {
@@ -366,11 +374,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
         {
             if (result.ContainsKey(pair.Key))
             {
-                result[pair.Key] = result[pair.Key].Concat(pair.Value).ToDictionary(k =>
-                {
-                    var symbol = _tokenSymbolMappingProvider.GetMappingSymbol(pair.Key.FromChainId, pair.Key.ToChainId, k.Key);
-                    return symbol;
-                }, v => v.Value);
+                result[pair.Key] = result[pair.Key].Concat(pair.Value).ToDictionary(k => k.Key, v => v.Value);
             }
             else
             {
