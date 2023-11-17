@@ -213,7 +213,7 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             {
                 capacity = capacity / (decimal)Math.Pow(10, token.Decimals);
                 refillRate = refillRate / (decimal)Math.Pow(10, token.Decimals);
-                time = (int)Math.Ceiling(capacity / refillRate / 60);
+                time = (int)Math.Ceiling(capacity / refillRate / CrossChainServerConsts.DefaultRateLimitSeconds);
             }
 
             result.Add(new RateLimitInfo
