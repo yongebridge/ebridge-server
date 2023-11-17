@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace AElf.CrossChainServer.Contracts.Bridge;
 
-[Function("GetCurrentReceiptTokenBucketStates", "tuple[]")]
+[Function("getCurrentReceiptTokenBucketStates", "tuple[]")]
 public class GetCurrentReceiptTokenBucketStatesFunctionMessage : FunctionMessage
 {
     [Parameter("address[]", "tokens", 1)] public List<string> Token { get; set; }
