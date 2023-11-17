@@ -236,7 +236,7 @@ public class EvmBridgeContractProvider : EvmClientProvider, IBridgeContractProvi
     {
         var tokenCapacity = (decimal)(new BigDecimal(capacity) / BigInteger.Pow(10, tokenDecimal));
         var refillRate = (decimal)(new BigDecimal(rate) / BigInteger.Pow(10, tokenDecimal));
-        var maximumTimeConsumed = (int)Math.Ceiling(tokenCapacity / refillRate / 60);
+        var maximumTimeConsumed = (int)Math.Ceiling(tokenCapacity / refillRate / CrossChainServerConsts.DefaultRateLimitSeconds);
         return new TokenBucketDto
         {
             Capacity = tokenCapacity,

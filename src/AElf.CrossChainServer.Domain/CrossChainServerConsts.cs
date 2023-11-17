@@ -14,4 +14,5 @@ public static class CrossChainServerConsts
     public const int DefaultReportTimeoutHeightThreshold = 3600;
     public const long DefaultMaxReportResendTimes = 3;
     public const long DefaultDailyLimitRefreshTime = 3600;
+    public const long DefaultRateLimitSeconds = 60;
 }
