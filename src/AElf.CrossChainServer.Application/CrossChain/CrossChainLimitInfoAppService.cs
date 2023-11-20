@@ -258,6 +258,8 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
                         ChainId = chainId
                     });
                     tokenIds.Add(tokenInfo.Id);
+                    tokenInfo.Symbol =
+                        _tokenSymbolMappingProvider.GetMappingSymbol(chainId, token.TargetChainId, tokenInfo.Symbol);
                     tokenSymbols.Add(tokenInfo.Symbol);
                 }
 
@@ -344,8 +346,6 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
 
     private void GetRateLimitsResult(ref Dictionary<CrossChainLimitKey, Dictionary<string, TokenBucketDto>> result, CrossChainLimitKey limitKey, TokenBucketDto tokenBucket, string symbol)
     {
-        symbol =
-            _tokenSymbolMappingProvider.GetMappingSymbol(limitKey.ToChainId, limitKey.FromChainId, symbol);
         var tokenDictionary = new Dictionary<string, TokenBucketDto>
         {
             [symbol] = tokenBucket
