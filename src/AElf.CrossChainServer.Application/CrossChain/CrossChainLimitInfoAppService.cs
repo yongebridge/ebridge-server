@@ -47,38 +47,40 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
     public async Task<ListResultDto<CrossChainDailyLimitsDto>> GetCrossChainDailyLimitsAsync()
     {
         var crossChainLimits = _crossChainLimitsOptions.CurrentValue;
-        var chainIdInfo = crossChainLimits.ChainIdInfo;
+        var toChainIds = new HashSet<string>(crossChainLimits.ChainIdInfo.ToChainIds);
         var indexerCrossChainLimitInfos =
             await _indexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync();
         //sort by config fromChainId first.
-        indexerCrossChainLimitInfos = indexerCrossChainLimitInfos
-            .OrderByDescending(item => item.FromChainId == chainIdInfo.TokenFirstChainId)
+        var crossChainLimitInfos = indexerCrossChainLimitInfos
+            .Where(item => toChainIds.Contains(item.ToChainId))
+            .OrderByDescending(item => item.FromChainId == crossChainLimits.ChainIdInfo.TokenFirstChainId)
             .ToList();
-        var dailyLimits = new Dictionary<string, CrossChainDailyLimitsDto>();
+        var fromChainDailyLimits = new Dictionary<string, FromChainDailyLimitsDto>();
         var tokenDict = new Dictionary<string, TokenDto>();
-        foreach (var info in indexerCrossChainLimitInfos)
+        foreach (var info in crossChainLimitInfos)
         {
-            if (info.ToChainId != chainIdInfo.ToChainId || dailyLimits.ContainsKey(info.Symbol))
+            var key = info.Symbol;
+            // skip if the current item does not match the fromChainId
+            if (fromChainDailyLimits.TryGetValue(key, out var chainDailyLimitsDto)
+                && chainDailyLimitsDto.FromChainId != info.FromChainId)
             {
                 continue;
             }
             //avoid repeated get
-            var key = info.ToChainId + "_" + info.Symbol;
-            if (!tokenDict.TryGetValue(key, out var token))
+            var tokenKey = info.ToChainId + "_" + info.Symbol;
+            if (!tokenDict.TryGetValue(tokenKey, out var token))
             {
                 token = await GetTokenInfoAsync(info.ToChainId, info.Symbol);
-                tokenDict[key] = token;
+                tokenDict[tokenKey] = token;
             }
-            var limitsDto = new CrossChainDailyLimitsDto
-            {
-                Token = token.Symbol,
-                Allowance = info.DefaultDailyLimit / (decimal)Math.Pow(10, token.Decimals)
-            };
-            dailyLimits.Add(info.Symbol, limitsDto);
+            var allowance = info.DefaultDailyLimit / (decimal)Math.Pow(10, token.Decimals);
+            chainDailyLimitsDto ??= new FromChainDailyLimitsDto(info.FromChainId, info.Symbol, 0);
+            chainDailyLimitsDto.Allowance += allowance;
+            fromChainDailyLimits[key] = chainDailyLimitsDto;
         }
-
         //add token sort logic
-        var resultList = dailyLimits.Values.ToList().OrderBy(item => crossChainLimits.GetTokenSortWeight(item.Token))
+        var resultList = fromChainDailyLimits.Values.Select(item => new CrossChainDailyLimitsDto(item.Token, item.Allowance))
+            .OrderBy(item => crossChainLimits.GetTokenSortWeight(item.Token))
             .ToList();
         return new ListResultDto<CrossChainDailyLimitsDto>
         {
@@ -387,6 +389,21 @@ public class CrossChainLimitInfoAppService : CrossChainServerAppService, ICrossC
             ChainId = convertedChainId,
             Symbol = symbol
         });
+    }
+}
+
+
+public class FromChainDailyLimitsDto
+{
+    public string FromChainId { get; set; }
+    public string Token { get; set; }
+    public decimal Allowance { get; set; }
+
+    public FromChainDailyLimitsDto(string fromChainId, string token, decimal allowance)
+    {
+        FromChainId = fromChainId;
+        Token = token;
+        Allowance = allowance;
     }
 }
 

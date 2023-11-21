@@ -68,12 +68,10 @@ public class CrossChainLimitInfoAppServiceTest
         
         // Act
         var result = await _service.GetCrossChainDailyLimitsAsync();
-
-        Assert.Equal(expectedDtoList.Count, result.Items.Count * 3);
-
+        
         var elfToken = result.Items.Where(r => r.Token.Equals("ELF")).Select(r => r.Allowance).FirstOrDefault();
         
-        Assert.Equal(new decimal(0.10000004), elfToken);
+        Assert.Equal(new decimal(0.20000010), elfToken);
         
         var firstToken = result.Items.Select(r => r.Token).FirstOrDefault();
         
@@ -103,7 +101,7 @@ public class CrossChainLimitInfoAppServiceTest
         var result = await _service.GetCrossChainRateLimitsAsync();
 
         // Assert
-        Assert.Equal(crossChainLimitInfos.Count, result.Items.Count * 2);
+        Assert.Equal(3, result.Items.Count);
     }
 
     
@@ -114,7 +112,10 @@ public class CrossChainLimitInfoAppServiceTest
             ChainIdInfo = new ChainIdInfo
             {
                 TokenFirstChainId = "Sepolia",
-                ToChainId = "AELF"
+                ToChainIds = new List<string>
+                {
+                    "AELF","tDVV"
+                }
             },
             
             TokenSortRules = new Dictionary<string, int>()
@@ -162,7 +163,7 @@ public class CrossChainLimitInfoAppServiceTest
     private List<IndexerCrossChainLimitInfo> MockIndexerCrossChainLimitInfos()
     {
         var crossChainLimitInfos = new List<IndexerCrossChainLimitInfo>();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 8; i++)
         {
             string _from = "";
             string _to = "";
@@ -206,6 +207,20 @@ public class CrossChainLimitInfoAppServiceTest
             {
                 _from = "Sepolia";
                 _to = "AELF";
+                _symbol = "BTC";
+                _limitType = CrossChainLimitType.Swap;
+            }
+            else if (i == 6)
+            {
+                _from = "Sepolia";
+                _to = "tDVV";
+                _symbol = "ELF";
+                _limitType = CrossChainLimitType.Swap;
+            }
+            else if (i == 7)
+            {
+                _from = "Sepolia";
+                _to = "tDVV";
                 _symbol = "BTC";
                 _limitType = CrossChainLimitType.Swap;
             }

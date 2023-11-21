@@ -36,5 +36,5 @@ public class ChainIdInfo
     //ChainId with high priority(if it has repeated ChainId)
     public string TokenFirstChainId { get; set; }
     
-    public string ToChainId { get; set; }
+    public List<string> ToChainIds { get; set; }
 }
