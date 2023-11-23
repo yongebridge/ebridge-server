@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using AElf.Client.Proto;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts;
 using AElf.CrossChainServer.Indexer;
@@ -58,7 +60,7 @@ public class CrossChainLimitInfoAppServiceTest
         var expectedDtoList = MockIndexerCrossChainLimitInfos();
         
         _mockIndexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync()
-            .Returns(MockIndexerCrossChainLimitInfos());
+            .Returns(expectedDtoList);
         
         _mockCrossChainLimitsOptions.CurrentValue.Returns(MockEthChainIdsOptions());
         
@@ -71,11 +73,12 @@ public class CrossChainLimitInfoAppServiceTest
         
         var elfToken = result.Items.Where(r => r.Token.Equals("ELF")).Select(r => r.Allowance).FirstOrDefault();
         
-        Assert.Equal(new decimal(0.20000010), elfToken);
+        Assert.Equal(new decimal(0.2010), elfToken);
         
         var firstToken = result.Items.Select(r => r.Token).FirstOrDefault();
         
-        Assert.Equal("BTC", firstToken);
+        //sort of ELF is first
+        Assert.Equal("ELF", firstToken);
     }   
 
 
@@ -85,7 +88,7 @@ public class CrossChainLimitInfoAppServiceTest
         // Arrange
         var crossChainLimitInfos = MockIndexerCrossChainLimitInfos();
         _mockIndexerCrossChainLimitInfoService.GetAllCrossChainLimitInfoIndexAsync()
-            .Returns(MockIndexerCrossChainLimitInfos());
+            .Returns(crossChainLimitInfos);
 
         _mockCrossChainLimitsOptions.CurrentValue.Returns(MockEthChainIdsOptions());
         
@@ -97,11 +100,13 @@ public class CrossChainLimitInfoAppServiceTest
 
         MockBridgeContractAppService();
 
+        MockTokenSymbolMappingProvider();
+
         // Act
         var result = await _service.GetCrossChainRateLimitsAsync();
 
         // Assert
-        Assert.Equal(3, result.Items.Count);
+        Assert.Equal(4, result.Items.Count);
     }
 
     
@@ -128,8 +133,14 @@ public class CrossChainLimitInfoAppServiceTest
             
             ChainSortRules = new Dictionary<string, int>()
             {
-                {"Sepolia-AELF", 0},
-                {"Evm-ALELF", 1}
+                {"Sepolia-AELF", 1},
+                {"Sepolia-tDVV", 2},
+                {"AELF-Sepolia", 3},
+                {"tDVW-Sepolia", 4},
+                {"BSC-AELF", 5},
+                {"BSC-tDVV", 6},
+                {"AELF-BSC", 7},
+                {"tDVV-BSC", 8}
             }
         };
         return evmTokensOptions;
@@ -142,17 +153,17 @@ public class CrossChainLimitInfoAppServiceTest
             Tokens = new Dictionary<string, List<TokenInfo>>
             {
                 {
-                    "Evm", new List<TokenInfo>
+                    "Sepolia", new List<TokenInfo>
                     {
-                        new TokenInfo { Address = "0xTokenAddress1", TargetChainId = "AElf" },
-                        new TokenInfo { Address = "0xTokenAddress2", TargetChainId = "AElf" }
+                        new TokenInfo { Address = "Sepolia_Address", TargetChainId = "MainChain_AELF" },
+                        new TokenInfo { Address = "Sepolia_Address", TargetChainId = "SideChain_tDVV" }
                     }
                 },
                 {
-                    "AElf", new List<TokenInfo>
+                    "BSCTest", new List<TokenInfo>
                     {
-                        new TokenInfo { Address = "0xTokenAddress3", TargetChainId = "Evm" },
-                        new TokenInfo { Address = "0xTokenAddress4", TargetChainId = "Evm" }
+                        new TokenInfo { Address = "BSCTest_Address", TargetChainId = "MainChain_AELF" },
+                        new TokenInfo { Address = "BSCTest_Address", TargetChainId = "SideChain_tDVV" }
                     }
                 }
             }
@@ -162,134 +173,163 @@ public class CrossChainLimitInfoAppServiceTest
 
     private List<IndexerCrossChainLimitInfo> MockIndexerCrossChainLimitInfos()
     {
+        var fromToChainJsonArray = @"[
+            {
+              ""FromChainId"": ""BSCTest"",
+              ""ToChainId"": ""AELF""
+            },
+            {
+              ""FromChainId"": ""AELF"",
+              ""ToChainId"": ""BSCTest""
+            },
+            {
+              ""FromChainId"": ""AELF"",
+              ""ToChainId"": ""Sepolia""
+            },
+            {
+              ""FromChainId"": ""Sepolia"",
+              ""ToChainId"": ""AELF""
+            },
+            {
+              ""FromChainId"": ""tDVV"",
+              ""ToChainId"": ""BSCTest""
+            },
+            {
+              ""FromChainId"": ""BSCTest"",
+              ""ToChainId"": ""tDVV""            
+            },
+            {
+              ""FromChainId"": ""tDVV"",
+              ""ToChainId"": ""Sepolia""
+            },
+            {
+              ""FromChainId"": ""Sepolia"",
+              ""ToChainId"": ""tDVV""
+            }
+          ]";
+        var fromToChainList = JsonSerializer.Deserialize<List<IndexerCrossChainLimitInfo>>(fromToChainJsonArray);
+        var aelfChains = new HashSet<string> { "AELF", "tDVV" };
+        var tokenList = new List<string>(new [] { "ELF", "USDT"});
         var crossChainLimitInfos = new List<IndexerCrossChainLimitInfo>();
-        for (int i = 0; i < 8; i++)
+        for (var i = 0; i < tokenList.Count; i++)
         {
-            string _from = "";
-            string _to = "";
-            string _symbol = "";
-            var _limitType = CrossChainLimitType.Receipt;
-            if (i == 0)
+            for (var j = 0; j < fromToChainList.Count; j++)
             {
-                _from = "AELF";
-                _to = "Evm";
-                _symbol = "ELF";
+                var limit = fromToChainList[j];
+                var t = (i + j) * 10000;
+                var info = new IndexerCrossChainLimitInfo();
+                info.FromChainId = limit.FromChainId;
+                info.ToChainId = limit.ToChainId;
+                info.LimitType = aelfChains.Contains(info.ToChainId) ? CrossChainLimitType.Swap : CrossChainLimitType.Receipt;
+                info.Symbol = tokenList[i];
+                info.DefaultDailyLimit = 10000000 + t;
+                info.RefreshTime = DateTime.UtcNow;
+                info.CurrentDailyLimit = 8000000 + t;
+                info.Capacity = 5000000 + t;
+                info.RefillRate = 100000 + t;
+                info.IsEnable = true;
+                info.CurrentBucketTokenAmount = 2500000 + t;
+                info.BucketUpdateTime = DateTime.UtcNow;
+                info.Id = info.FromChainId + "-" + info.ToChainId + "-" + info.Symbol;
+                crossChainLimitInfos.Add(info);
             }
-            else if (i == 1)
-            {
-                _from = "AELF";
-                _to = "Evm";
-                _symbol = "BTC";
-            }
-            else if (i == 2)
-            {
-                _from = "Evm";
-                _to = "AELF";
-                _symbol = "ELF";
-                _limitType = CrossChainLimitType.Swap;
-            }
-            else if (i == 3)
-            {
-                _from = "Evm";
-                _to = "AELF";
-                _symbol = "BTC";
-                _limitType = CrossChainLimitType.Swap;
-            }
-            
-            else if (i == 4)
-            {
-                _from = "Sepolia";
-                _to = "AELF";
-                _symbol = "ELF";
-                _limitType = CrossChainLimitType.Swap;
-            }
-            else if (i == 5)
-            {
-                _from = "Sepolia";
-                _to = "AELF";
-                _symbol = "BTC";
-                _limitType = CrossChainLimitType.Swap;
-            }
-            else if (i == 6)
-            {
-                _from = "Sepolia";
-                _to = "tDVV";
-                _symbol = "ELF";
-                _limitType = CrossChainLimitType.Swap;
-            }
-            else if (i == 7)
-            {
-                _from = "Sepolia";
-                _to = "tDVV";
-                _symbol = "BTC";
-                _limitType = CrossChainLimitType.Swap;
-            }
-
-            var one = new IndexerCrossChainLimitInfo
-            {
-                FromChainId = _from,
-                ToChainId = _to,
-                Symbol = _symbol,
-                LimitType = _limitType,
-                DefaultDailyLimit = 10000000 + i,
-                RefreshTime = DateTime.UtcNow,
-                CurrentDailyLimit = 8000000 + i,
-                Capacity = 5000000 + i,
-                RefillRate = 100000 + i,
-                IsEnable = true,
-                CurrentBucketTokenAmount = 2500000 + i,
-                BucketUpdateTime = DateTime.UtcNow
-            };
-            one.Id = one.FromChainId + "-" + one.ToChainId + "-" + one.Symbol;
-            crossChainLimitInfos.Add(one);
         }
-
         return crossChainLimitInfos;
     }
 
     private void MockChainAppService()
     {
-        _mockChainAppService.GetAsync(Arg.Is<string>(s => s == "AElf"))
+        var aelfChain = new ChainDto
+        {
+            Id = "MainChain_AELF",
+            IsMainChain = true,
+            Type = BlockchainType.AElf,
+            BlockChain = "AElf",
+            AElfChainId = 9992731
+        };
+        
+        var tDVVChain = new ChainDto
+        {
+            Id = "SideChain_tDVV",
+            IsMainChain = false,
+            Type = BlockchainType.AElf,
+            BlockChain = "AElf",
+            AElfChainId = 1866392
+
+        };
+        _mockChainAppService.GetAsync(Arg.Is<string>(s => "MainChain_AELF".Contains(s)))
+            .Returns(aelfChain);
+        _mockChainAppService.GetAsync(Arg.Is<string>(s => "SideChain_tDVV".Contains(s)))
+            .Returns(tDVVChain);
+        _mockChainAppService.GetAsync(Arg.Is<string>(s =>  "Sepolia".Contains(s)))
             .Returns(new ChainDto
             {
-                Type = BlockchainType.AElf
+                Id = "Sepolia",
+                IsMainChain = true,
+                Type = BlockchainType.Evm,
+                BlockChain = "ETH"
             });
-
-        _mockChainAppService.GetAsync(Arg.Is<string>(s =>  "Evm, Sepolia".Contains(s)))
+        
+        _mockChainAppService.GetAsync(Arg.Is<string>(s =>  "BSCTest".Contains(s)))
             .Returns(new ChainDto
             {
-                Type = BlockchainType.Evm
+                Id = "BSCTest",
+                IsMainChain = true,
+                Type = BlockchainType.Evm,
+                BlockChain = "BSC"
             });
-
-        _mockChainAppService.GetByAElfChainIdAsync(Arg.Any<int>())
-            .Returns(new ChainDto()
-            {
-                Type = BlockchainType.AElf,
-                Id = "AElf"
-            });
+        
+        _mockChainAppService.GetByAElfChainIdAsync(Arg.Is<int>(s => s == 9992731))
+            .Returns(aelfChain);
+        _mockChainAppService.GetByAElfChainIdAsync(Arg.Is<int>(s => s == 1866392))
+            .Returns(aelfChain);
     }
 
     private void MockTokenAppService()
     {
-        _mockTokenAppService
-            .GetAsync(Arg.Is<GetTokenInput>(input => "AElf,Evm".Contains(input.ChainId) && input.Symbol == "ELF"))
-            .Returns(new TokenDto
-            {
-                Symbol = "ELF", Id = new Guid(), Decimals = 8
-            });
 
-        _mockTokenAppService
-            .GetAsync(Arg.Is<GetTokenInput>(input => "AElf,Evm".Contains(input.ChainId) && input.Symbol == "BTC"))
-            .Returns(new TokenDto
+        var tokenDict = new Dictionary<string, int>
+        {
+            { "ELF", 8 },
+            { "USDT", 6 }
+        };
+        
+        var chainIds = new HashSet<string> { "MainChain_AELF", "SideChain_tDVV", "Sepolia" ,"BSCTest"};
+        
+        foreach (var token in tokenDict)
+        {
+            
+            foreach (var chainId in chainIds)
             {
-                Symbol = "BTC", Id = new Guid(), Decimals = 8
-            });
+                _mockTokenAppService
+                    .GetAsync(Arg.Is<GetTokenInput>(input => chainId.Contains(input.ChainId) 
+                                                             && (input.Symbol == token.Key || input.Address.Contains(chainId))))
+                    .Returns(new TokenDto
+                    {
+                        Symbol = token.Key, Id = new Guid(), Decimals = token.Value
+                    });
+            }
+
+        }
+    }
+    
+    private void MockTokenSymbolMappingProvider()
+    {
+        
+        var symbols = new HashSet<string> { "ELF", "USDT", "BTC" ,"USDC"};
+
+        foreach (var symbol in symbols)
+        {
+            _mockTokenSymbolMappingProvider
+                .GetMappingSymbol(Arg.Any<string>(), Arg.Any<string>(), symbol)
+                .Returns(symbol);
+        }
     }
 
     private void MockBridgeContractAppService()
     {
         _mockBridgeContractAppService
-            .GetCurrentReceiptTokenBucketStatesAsync(Arg.Is("Evm"), Arg.Any<List<Guid>>(), Arg.Any<List<string>>())
+            .GetCurrentReceiptTokenBucketStatesAsync(Arg.Is("Sepolia"), Arg.Any<List<Guid>>(), Arg.Any<List<string>>())
             .Returns(new List<TokenBucketDto>()
             {
                 new()
@@ -301,7 +341,32 @@ public class CrossChainLimitInfoAppServiceTest
             });
 
         _mockBridgeContractAppService
-            .GetCurrentSwapTokenBucketStatesAsync(Arg.Is("AElf"), Arg.Any<List<Guid>>(), Arg.Any<List<string>>())
+            .GetCurrentSwapTokenBucketStatesAsync(Arg.Is("Sepolia"), Arg.Any<List<Guid>>(), Arg.Any<List<string>>())
+            .Returns(new List<TokenBucketDto>()
+            {
+                new()
+                {
+                    Capacity = 122,
+                    RefillRate = 103,
+                    MaximumTimeConsumed = 4
+                }
+            });
+        
+        
+        _mockBridgeContractAppService
+            .GetCurrentReceiptTokenBucketStatesAsync(Arg.Is("BSCTest"), Arg.Any<List<Guid>>(), Arg.Any<List<string>>())
+            .Returns(new List<TokenBucketDto>()
+            {
+                new()
+                {
+                    Capacity = 121,
+                    RefillRate = 102,
+                    MaximumTimeConsumed = 3
+                }
+            });
+
+        _mockBridgeContractAppService
+            .GetCurrentSwapTokenBucketStatesAsync(Arg.Is("BSCTest"), Arg.Any<List<Guid>>(), Arg.Any<List<string>>())
             .Returns(new List<TokenBucketDto>()
             {
                 new()
