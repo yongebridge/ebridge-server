@@ -5,7 +5,7 @@ namespace AElf.CrossChainServer.CrossChain;
 
 public class MockCheckTransferProvider : ICheckTransferProvider
 {
-    public async Task<bool> CheckTransferAsync(string chainId, Guid tokenId, decimal transferAmount)
+    public async Task<bool> CheckTransferAsync(string fromChainId, string toChainId, Guid tokenId, decimal transferAmount)
     {
         return true;
     }

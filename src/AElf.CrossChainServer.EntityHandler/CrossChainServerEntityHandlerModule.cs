@@ -39,7 +39,6 @@ namespace AElf.CrossChainServer.EntityHandler
             ConfigureCache(configuration);
             ConfigureRedis(context, configuration);
             ConfigureBlob(configuration);
-            ConfigureGraphQl(context, configuration);
             ConfigureAuditLog(configuration);
             context.Services.AddHostedService<CrossChainServerHostedService>();
         }
@@ -74,13 +73,6 @@ namespace AElf.CrossChainServer.EntityHandler
             context.Services
                 .AddDataProtection()
                 .PersistKeysToStackExchangeRedis(redis, "CrossChainServer-Protection-Keys");
-        }
-        
-        private void ConfigureGraphQl(ServiceConfigurationContext context,
-            IConfiguration configuration)
-        {
-            context.Services.AddSingleton<IGraphQLClient>(new GraphQLHttpClient(configuration["GraphQL:Configuration"],
-                new NewtonsoftJsonSerializer()));
         }
         
         private void ConfigureAuditLog(IConfiguration configuration)

@@ -29,5 +29,4 @@ public class CrossChainTransferBase : CrossChainServerEntity<Guid>
     public string ReceiptId { get; set; }
     public int Progress { get; set; }
     public DateTime ProgressUpdateTime { get; set; }
-    public bool TransferNeedToBeApproved { get; set; }
 }

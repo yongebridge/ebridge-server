@@ -14,10 +14,10 @@ public class CrossChainIndexingInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly ICrossChainIndexingInfoAppService _crossChainIndexingInfoAppService;
 
-    public CrossChainIndexingInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
+    public CrossChainIndexingInfoIndexerSyncProvider(IGraphQLClientFactory graphQlClientFactory, ISettingManager settingManager,
         IChainAppService chainAppService,IJsonSerializer jsonSerializer,IIndexerAppService indexerAppService,
         ICrossChainIndexingInfoAppService crossChainIndexingInfoAppService) : base(
-        graphQlClient, settingManager,jsonSerializer,indexerAppService, chainAppService)
+        graphQlClientFactory, settingManager,jsonSerializer,indexerAppService, chainAppService)
     {
         _crossChainIndexingInfoAppService = crossChainIndexingInfoAppService;
     }
