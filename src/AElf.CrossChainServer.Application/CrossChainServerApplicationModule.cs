@@ -52,8 +52,10 @@ public class CrossChainServerApplicationModule : AbpModule
         
         context.Services.AddSingleton<IBlockchainClientFactory<AElfClient>, AElfClientFactory>();
         context.Services.AddSingleton<IBlockchainClientFactory<Nethereum.Web3.Web3>, EvmClientFactory>();
+        context.Services.AddSingleton<IBlockchainClientFactory<TronClient.TronClient>, TronClientFactory>();
         context.Services.AddTransient<IBlockchainClientProvider, AElfClientProvider>();
         context.Services.AddTransient<IBlockchainClientProvider, EvmClientProvider>();
+        context.Services.AddTransient<IBlockchainClientProvider, TronClientProvider>();
         
         context.Services.AddTransient<IBridgeContractProvider, EvmBridgeContractProvider>();
         context.Services.AddTransient<IBridgeContractProvider, AElfBridgeContractProvider>();
