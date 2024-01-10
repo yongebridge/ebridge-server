@@ -2,10 +2,10 @@ using System;
 using System.Numerics;
 using System.Threading.Tasks;
 using AElf.Client.Dto;
+using AElf.CrossChainServer.Chains.TronFunctionMessage;
 using AElf.CrossChainServer.Tokens;
 using Microsoft.Extensions.Options;
 using TronClient;
-using TronNet.ABI;
 
 namespace AElf.CrossChainServer.Chains
 {
@@ -76,29 +76,20 @@ namespace AElf.CrossChainServer.Chains
         
         private static async Task<string> GetSymbol(IContract contractHandler)
         {
-            var response = await contractHandler.CallAsync<ConstantTransactionResponse>(new TronConstantContractFunctionMessage
+            var result = await contractHandler.CallAsync<SymbolFunctionMessage, SymbolDto>(new TronConstantContractFunctionMessage<SymbolFunctionMessage>
             {
-                FunctionSelector = "symbol()"
+                FunctionMessage = new SymbolFunctionMessage()
             });
-            
-            var symbolInBytes = Convert.FromHexString(response.constant_result[0]);
-            symbolInBytes = symbolInBytes.Slice(32);
-            
-            var symbolAbi = ABIType.CreateABIType("string");
-            var symbol = symbolAbi.Decode<string>(symbolInBytes);
-            return symbol;
+            return result.Symbol;
         }
 
         private static async Task<BigInteger> GetDecimals(IContract contractHandler)
         {
-            var response = await contractHandler.CallAsync<ConstantTransactionResponse>(new TronConstantContractFunctionMessage
+            var result = await contractHandler.CallAsync<DecimalsFunctionMessage, DecimalsDto>(new TronConstantContractFunctionMessage<DecimalsFunctionMessage>
             {
-                FunctionSelector = "decimals()"
+                FunctionMessage = new DecimalsFunctionMessage()
             });
-            
-            var decimalsAbi = ABIType.CreateABIType("uint256");
-            var decimals = decimalsAbi.Decode<BigInteger>(response.constant_result[0]);
-            return decimals;
+            return result.Decimals;
         }
     }
 }
