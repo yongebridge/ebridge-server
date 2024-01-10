@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Tokens;
+using Nethereum.Util;
 using TronClient;
 
 namespace AElf.CrossChainServer.Contracts.Bridge;
@@ -19,29 +20,6 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
     {
         _tokenAppService = tokenAppService;
     }
-    
-    [FunctionOutput]
-    public class GetReceiptInfosDto: IFunctionOutputDTO
-    {
-        [Parameter("tuple[]", "_receipts", 1)]
-        public List<ReceiptDto> Receipts { get; set; }
-    }
-    
-    [Function("getSendReceiptInfos", "tuple[]")]
-    public class GetReceiptInfosFunctionMessage: FunctionMessage
-    {
-        [Parameter("address", "token", 1)]
-        public string Token { get; set; }
-    
-        [Parameter("string", "targetChainId", 2)]
-        public string TargetChainId { get; set; }
-    
-        [Parameter("uint256", "fromIndex", 3)]
-        public BigInteger FromIndex { get; set; }
-    
-        [Parameter("uint256", "endIndex", 4)]
-        public BigInteger EndIndex { get; set; }
-    }
 
     public async Task<List<ReceiptInfoDto>> GetSendReceiptInfosAsync(string chainId, string contractAddress, string targetChainId, Guid tokenId,
         long fromIndex, long endIndex)
@@ -49,31 +27,21 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         var token = await _tokenAppService.GetAsync(tokenId);
         var tronClient = BlockchainClientFactory.GetClient(chainId);
         var contractHandler = tronClient.GetContract(contractAddress);
-
-        var tronGetReceiptInfos = await contractHandler.CallAsync<>(new TronConstantContractFunctionMessage
+        
+        var tronGetReceiptInfos = await contractHandler.CallAsync<GetReceiptInfosFunctionMessage, TronDto.GetReceiptInfosDto>(new TronConstantContractFunctionMessage<GetReceiptInfosFunctionMessage>
+        {
+            FunctionMessage = new GetReceiptInfosFunctionMessage
             {
-                FunctionSelector = "getSendReceiptInfos()"
-            })
-            .QueryDeserializingToObjectAsync<GetReceiptInfosFunctionMessage, GetReceiptInfosDto>(
-                new GetReceiptInfosFunctionMessage
-                {
-                    Token = token.Address,
-                    TargetChainId = targetChainId,
-                    FromIndex = fromIndex,
-                    EndIndex = endIndex
-                });
-        var evmGetReceiptInfos = await contractHandler
-            .QueryDeserializingToObjectAsync<GetReceiptInfosFunctionMessage, GetReceiptInfosDto>(
-                new GetReceiptInfosFunctionMessage
-                {
-                    Token = token.Address,
-                    TargetChainId = targetChainId,
-                    FromIndex = fromIndex,
-                    EndIndex = endIndex
-                });
+                Token = token.Address,
+                TargetChainId = targetChainId,
+                FromIndex = fromIndex,
+                EndIndex = endIndex
+            },
+            Visible = true
+        });
 
         var result = new List<ReceiptInfoDto>();
-        foreach (var receipt in evmGetReceiptInfos.Receipts)
+        foreach (var receipt in tronGetReceiptInfos.Receipts)
         {
             var receiptInfo = new ReceiptInfoDto();
             receiptInfo.ReceiptId = receipt.ReceiptId;
@@ -95,21 +63,23 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         long fromIndex, long endIndex)
     {
         var token = await _tokenAppService.GetAsync(tokenId);
-        var web3 = BlockchainClientFactory.GetClient(chainId);
-        var contractHandler = web3.Eth.GetContractHandler(contractAddress);
+        var tronClient = BlockchainClientFactory.GetClient(chainId);
+        var contractHandler = tronClient.GetContract(contractAddress);
         
-        var evmGetReceiptInfos = await contractHandler
-            .QueryDeserializingToObjectAsync<GetReceivedReceiptInfosFunctionMessage, GetReceivedReceiptInfosDto>(
-                new GetReceivedReceiptInfosFunctionMessage
-                {
-                    Token = token.Address,
-                    FromChainId = fromChainId,
-                    FromIndex = fromIndex,
-                    EndIndex = endIndex
-                });
+        var tronGetReceiptInfos = await contractHandler.CallAsync<GetReceivedReceiptInfosFunctionMessage, TronDto.GetReceivedReceiptInfosDto>(new TronConstantContractFunctionMessage<GetReceivedReceiptInfosFunctionMessage>
+        {
+            FunctionMessage = new GetReceivedReceiptInfosFunctionMessage
+            {
+                Token = token.Address,
+                FromChainId = fromChainId,
+                FromIndex = fromIndex,
+                EndIndex = endIndex
+            },
+            Visible = true
+        });
 
         var result = new List<ReceivedReceiptInfoDto>();
-        foreach (var receipt in evmGetReceiptInfos.Receipts)
+        foreach (var receipt in tronGetReceiptInfos.Receipts)
         {
             var receiptInfo = new ReceivedReceiptInfoDto();
             receiptInfo.ReceiptId = receipt.ReceiptId;
@@ -137,16 +107,18 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
             tokenAddress.Add(token.Address);
         }
 
-        var web3 = BlockchainClientFactory.GetClient(chainId);
-        var contractHandler = web3.Eth.GetContractHandler(contractAddress);
+        var tronClient = BlockchainClientFactory.GetClient(chainId);
+        var contractHandler = tronClient.GetContract(contractAddress);
 
-        var indexes = await contractHandler
-            .QueryDeserializingToObjectAsync<GetSendReceiptIndexFunctionMessage, GetSendReceiptIndexDto>(
-                new GetSendReceiptIndexFunctionMessage
-                {
-                    Tokens = tokenAddress,
-                    TargetChainIds = targetChainIds
-                });
+        var indexes = await contractHandler.CallAsync<GetSendReceiptIndexFunctionMessage, TronDto.GetSendReceiptIndexDto>(new TronConstantContractFunctionMessage<GetSendReceiptIndexFunctionMessage>
+        {
+            FunctionMessage = new GetSendReceiptIndexFunctionMessage
+            {
+                Tokens = tokenAddress,
+                TargetChainIds = targetChainIds
+            },
+            Visible = true
+        });
 
         return indexes.Indexes.Select((t, i) => new ReceiptIndexDto
         {
@@ -165,16 +137,18 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
             tokenAddress.Add(token.Address);
         }
 
-        var web3 = BlockchainClientFactory.GetClient(chainId);
-        var contractHandler = web3.Eth.GetContractHandler(contractAddress);
-
-        var indexes = await contractHandler
-            .QueryDeserializingToObjectAsync<GetReceiveReceiptIndexFunctionMessage, GetReceiveReceiptIndexDto>(
-                new GetReceiveReceiptIndexFunctionMessage
-                {
-                    Tokens = tokenAddress,
-                    FromChainIds = fromChainIds
-                });
+        var tronClient = BlockchainClientFactory.GetClient(chainId);
+        var contractHandler = tronClient.GetContract(contractAddress);
+        
+        var indexes = await contractHandler.CallAsync<GetReceiveReceiptIndexFunctionMessage, TronDto.GetReceiveReceiptIndexDto>(new TronConstantContractFunctionMessage<GetReceiveReceiptIndexFunctionMessage>
+        {
+            FunctionMessage = new GetReceiveReceiptIndexFunctionMessage
+            {
+                Tokens = tokenAddress,
+                FromChainIds = fromChainIds
+            },
+            Visible = true
+        });
 
         return indexes.Indexes.Select((t, i) => new ReceiptIndexDto
         {
@@ -186,14 +160,16 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
 
     public async Task<bool> CheckTransmitAsync(string chainId, string contractAddress, string receiptHash)
     {
-        var web3 = BlockchainClientFactory.GetClient(chainId);
-        var contractHandler = web3.Eth.GetContractHandler(contractAddress);
-        var isTransmit = await contractHandler
-            .QueryDeserializingToObjectAsync<IsReceiptRecordedFunctionMessage, IsReceiptRecordedDto>(
-                new IsReceiptRecordedFunctionMessage
-                {
-                    ReceiptHash = ByteArrayHelper.HexStringToByteArray(receiptHash)
-                });
+        var tronClient = BlockchainClientFactory.GetClient(chainId);
+        var contractHandler = tronClient.GetContract(contractAddress);
+        var isTransmit = await contractHandler.CallAsync<IsReceiptRecordedFunctionMessage, TronDto.IsReceiptRecordedDto>(new TronConstantContractFunctionMessage<IsReceiptRecordedFunctionMessage>
+        {
+            FunctionMessage = new IsReceiptRecordedFunctionMessage
+            {
+                ReceiptHash = ByteArrayHelper.HexStringToByteArray(receiptHash)
+            },
+            Visible = true
+        });
 
         return isTransmit.IsReceiptRecorded;
     }
