@@ -5,6 +5,7 @@ using AElf.CrossChainServer.Chains;
 using AElf.Indexing.Elasticsearch;
 using Nest;
 using Volo.Abp;
+using Volo.Abp.Domain.Repositories;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -29,6 +30,13 @@ public class CrossChainIndexingInfoAppService : CrossChainServerAppService, ICro
 
     public async Task CreateAsync(CreateCrossChainIndexingInfoInput input)
     {
+        if (await _crossChainIndexingInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == input.ChainId && o.IndexChainId == input.IndexChainId &&
+                o.IndexBlockHeight == input.IndexBlockHeight) != null)
+        {
+            return;
+        }
+
         var index = ObjectMapper.Map<CreateCrossChainIndexingInfoInput, CrossChainIndexingInfo>(input);
         await _crossChainIndexingInfoRepository.InsertAsync(index);
     }

@@ -11,4 +11,6 @@ public class BridgeContractAddress
 {
     public string BridgeInContract { get; set; }
     public string BridgeOutContract { get; set; }
+
+    public string LimiterContract { get; set; }
 }

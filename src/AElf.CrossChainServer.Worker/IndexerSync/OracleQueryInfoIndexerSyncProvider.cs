@@ -14,10 +14,10 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly IOracleQueryInfoAppService _oracleQueryInfoAppService;
 
-    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, ISettingManager settingManager,
+    public OracleQueryInfoIndexerSyncProvider(IGraphQLClientFactory graphQlClientFactory, ISettingManager settingManager,
         IChainAppService chainAppService,IJsonSerializer jsonSerializer, IIndexerAppService indexerAppService,
         IOracleQueryInfoAppService oracleQueryInfoAppService) : base(
-        graphQlClient, settingManager,jsonSerializer,indexerAppService,chainAppService)
+        graphQlClientFactory, settingManager,jsonSerializer,indexerAppService,chainAppService)
     {
         _oracleQueryInfoAppService = oracleQueryInfoAppService;
     }

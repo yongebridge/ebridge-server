@@ -125,4 +125,21 @@ public class OracleQueryInfoAppServiceTests : CrossChainServerApplicationTestBas
         progress = await _oracleQueryInfoAppService.CalculateCrossChainProgressAsync(createInput1.ChainId, createInput1.Option);
         progress.ShouldBe(40);
     }
+
+    [Fact]
+    public async Task Create_Repeat_Test()
+    {
+        var createInput = new CreateOracleQueryInfoInput
+        {
+            Option = "Option",
+            Step = OracleStep.QueryCreated,
+            ChainId = "MainChain_AELF",
+            QueryId = "QueryId",
+            LastUpdateHeight = 100
+        };
+        await _oracleQueryInfoAppService.CreateAsync(createInput);
+
+        var list = await _oracleQueryInfoRepository.GetListAsync();
+        list.Count.ShouldBe(1);
+    }
 }

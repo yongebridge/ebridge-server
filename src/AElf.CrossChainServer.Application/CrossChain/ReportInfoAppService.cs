@@ -7,9 +7,11 @@ using System.Linq;
 using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Contracts;
 using AElf.CrossChainServer.Indexer;
+using AElf.CrossChainServer.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
+using Volo.Abp.Domain.Repositories;
 
 namespace AElf.CrossChainServer.CrossChain;
 
@@ -20,31 +22,43 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
     private readonly INESTRepository<ReportInfoIndex, Guid> _nestRepository;
     private readonly IBridgeContractAppService _bridgeContractAppService;
     private readonly IBlockchainAppService _blockchainAppService;
-    private readonly IEventHandlerAppService _eventHandlerAppService;
     private readonly IReportContractAppService _reportContractAppService;
-    private readonly ReportJobCategoryOptions _reportJobCategoryOptions;
     private readonly IIndexerAppService _indexerAppService;
+    private readonly CrossChainOptions _crossChainOptions;
+    private readonly ISettingManager _settingManager;
 
     public ReportInfoAppService(IReportInfoRepository reportInfoRepository,
         INESTRepository<ReportInfoIndex, Guid> nestRepository, IBridgeContractAppService bridgeContractAppService,
-        IBlockchainAppService blockchainAppService, IEventHandlerAppService eventHandlerAppService,
+        IBlockchainAppService blockchainAppService,
         IReportContractAppService reportContractAppService,
-        IOptionsSnapshot<ReportJobCategoryOptions> reportJobCategoryOptions, IIndexerAppService indexerAppService)
+        IOptionsSnapshot<CrossChainOptions> crossChainOptions, IIndexerAppService indexerAppService,
+        ISettingManager settingManager)
     {
         _reportInfoRepository = reportInfoRepository;
         _nestRepository = nestRepository;
         _bridgeContractAppService = bridgeContractAppService;
         _blockchainAppService = blockchainAppService;
-        _eventHandlerAppService = eventHandlerAppService;
         _reportContractAppService = reportContractAppService;
         _indexerAppService = indexerAppService;
-        _reportJobCategoryOptions = reportJobCategoryOptions.Value;
+        _settingManager = settingManager;
+        _crossChainOptions = crossChainOptions.Value;
     }
 
     public async Task CreateAsync(CreateReportInfoInput input)
     {
+        if (await _reportInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == input.ChainId && o.RoundId == input.RoundId && o.Token == input.Token &&
+                o.TargetChainId == input.TargetChainId) != null)
+        {
+            return;
+        }
+
         var info = ObjectMapper.Map<CreateReportInfoInput, ReportInfo>(input);
         info.Step = ReportStep.Proposed;
+        
+        var resendTimes = await _reportInfoRepository.CountAsync(o=>o.ChainId == info.ChainId && o.ReceiptHash == info.ReceiptHash);
+        info.ResendTimes = resendTimes;
+        
         await _reportInfoRepository.InsertAsync(info);
     }
 
@@ -144,7 +158,7 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
     {
         var q = await _reportInfoRepository.GetQueryableAsync();
         var list = await AsyncExecuter.ToListAsync(q
-            .Where(o => o.Step == ReportStep.Proposed));
+            .Where(o => o.Step == ReportStep.Proposed && o.ResendTimes < _crossChainOptions.MaxReportResendTimes));
 
         if (list.Count == 0)
         {
@@ -154,17 +168,27 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
         var toUpdateReports = new List<ReportInfo>();
         foreach (var item in list)
         {
-            var latestIndexHeight = await _indexerAppService.GetLatestIndexHeightAsync(item.ChainId);
-            if (latestIndexHeight - item.LastUpdateHeight <= CrossChainServerConsts.ReportTimeoutHeightThreshold) 
+            var latestIndexHeight = await GetReportSyncHeightAsync(item.ChainId);
+            if (latestIndexHeight - item.LastUpdateHeight <= _crossChainOptions.ReportTimeoutHeightThreshold) 
             {
                 continue;
             }
+            
+            var transmittedReport = await _reportInfoRepository.FirstOrDefaultAsync(o =>
+                o.ChainId == item.ChainId && o.ReceiptHash == item.ReceiptHash && o.Step == ReportStep.Transmitted );
+            if (transmittedReport != null)
+            {
+                item.Step = ReportStep.ResendSucceeded;
+            }
+            else
+            {
+                var txId = await SendQueryTransactionAsync(item);
+                Logger.LogInformation("ReSend Query, Resending Report: {reportId}, Query Tx Id: {txId}", item.Id, txId);
 
-            var txId = await SendQueryTransactionAsync(item);
-            Logger.LogInformation("ReSend Query, Resending Report: {reportId}, Query Tx Id: {txId}", item.Id, txId);
+                item.QueryTransactionId = txId;
+                item.Step = ReportStep.Resending;
+            }
 
-            item.QueryTransactionId = txId;
-            item.Step = ReportStep.Resending;
             toUpdateReports.Add(item);
         }
 
@@ -220,5 +244,11 @@ public class ReportInfoAppService : CrossChainServerAppService,IReportInfoAppSer
     {
         return await _reportContractAppService.QueryOracleAsync(reportInfo.ChainId, reportInfo.TargetChainId,
             reportInfo.ReceiptId, reportInfo.ReceiptHash);
+    }
+
+    private async Task<long> GetReportSyncHeightAsync(string chainId)
+    {
+        var setting = await _settingManager.GetOrNullAsync(chainId, CrossChainServerSettings.ReportIndexerSync);
+        return setting == null ? 0 : long.Parse(setting);
     }
 }
