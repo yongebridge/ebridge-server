@@ -185,8 +185,75 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         throw new NotImplementedException();
     }
 
-    public Task<bool> IsTransferCanReceiveAsync(string chainId, string contractAddress, string symbol, string amount)
+    public async Task<List<TokenBucketDto>> GetCurrentReceiptTokenBucketStatesAsync(string chainId, string contractAddress, List<Guid> tokenIds,
+        List<string> targetChainIds)
     {
-        throw new NotImplementedException();
+        var tokenAddress = new List<string>();
+        var tokenDecimals = new List<int>();
+        foreach (var tokenId in tokenIds)
+        {
+            var token = await _tokenAppService.GetAsync(tokenId);
+            tokenAddress.Add(token.Address);
+            tokenDecimals.Add(token.Decimals);
+        }
+        
+        var tronClient = BlockchainClientFactory.GetClient(chainId);
+        var contractHandler = tronClient.GetContract(contractAddress);
+        var receiptTokenBucket = await contractHandler.CallAsync<GetCurrentReceiptTokenBucketStatesFunctionMessage, TronDto.ReceiptTokenBucketsDto>(new TronConstantContractFunctionMessage<GetCurrentReceiptTokenBucketStatesFunctionMessage>
+        {
+            FunctionMessage = new GetCurrentReceiptTokenBucketStatesFunctionMessage
+            {
+                Token = tokenAddress,
+                TargetChainId = targetChainIds
+            },
+            Visible = true
+        });
+        var tokenBuckets = receiptTokenBucket.TokenBuckets.Select((t, i) =>
+            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDecimals[i])).ToList();
+        return tokenBuckets;
+    }
+
+    public async Task<List<TokenBucketDto>> GetCurrentSwapTokenBucketStatesAsync(string chainId, string contractAddress, List<Guid> tokenIds, List<string> fromChainIds)
+    {
+        var tokenAddress = new List<string>();
+        var tokenDecimals = new List<int>();
+        foreach (var tokenId in tokenIds)
+        {
+            var token = await _tokenAppService.GetAsync(tokenId);
+            tokenAddress.Add(token.Address);
+            tokenDecimals.Add(token.Decimals);
+        }
+        
+        var tronClient = BlockchainClientFactory.GetClient(chainId);
+        var contractHandler = tronClient.GetContract(contractAddress);
+        var swapTokenBucket = await contractHandler.CallAsync<GetCurrentSwapTokenBucketStatesFunctionMessage, TronDto.SwapTokenBucketsDto>(new TronConstantContractFunctionMessage<GetCurrentSwapTokenBucketStatesFunctionMessage>
+        {
+            FunctionMessage = new GetCurrentSwapTokenBucketStatesFunctionMessage
+            {
+                Token = tokenAddress,
+                FromChainId = fromChainIds
+            },
+            Visible = true
+        });
+        var tokenBuckets = swapTokenBucket.SwapTokenBuckets.Select((t, i) =>
+            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDecimals[i])).ToList();
+        return tokenBuckets;
+    }
+    
+    private static TokenBucketDto GetTokenBuckets(BigInteger capacity, BigInteger rate, int tokenDecimal)
+    {
+        if (capacity == 0 || rate == 0)
+        {
+            return new TokenBucketDto();
+        }
+        var tokenCapacity = (decimal)(new BigDecimal(capacity) / BigInteger.Pow(10, tokenDecimal));
+        var refillRate = (decimal)(new BigDecimal(rate) / BigInteger.Pow(10, tokenDecimal));
+        var maximumTimeConsumed = (int)Math.Ceiling(tokenCapacity / refillRate / CrossChainServerConsts.DefaultRateLimitSeconds);
+        return new TokenBucketDto
+        {
+            Capacity = tokenCapacity,
+            RefillRate = refillRate,
+            MaximumTimeConsumed = maximumTimeConsumed
+        };
     }
 }
