@@ -32,7 +32,7 @@ public class CrossChainServerApplicationTestModule : AbpModule
             {
                 { "Ethereum", "https://kovan.infura.io/v3/" },
                 { "MainChain_AELF", "https://aelf.io" },
-                { "Tron", "https://api.shasta.trongrid.io" }
+                { "Tron", "https://nile.trongrid.io" }
             };
         });
 
