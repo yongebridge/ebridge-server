@@ -7,6 +7,7 @@ using AElf.CrossChainServer.Chains;
 using AElf.CrossChainServer.Tokens;
 using Nethereum.Util;
 using TronClient;
+using TronNet.Crypto;
 
 namespace AElf.CrossChainServer.Contracts.Bridge;
 
@@ -193,7 +194,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         foreach (var tokenId in tokenIds)
         {
             var token = await _tokenAppService.GetAsync(tokenId);
-            tokenAddress.Add(token.Address);
+            tokenAddress.Add(TronAddressToHex(token.Address));
             tokenDecimals.Add(token.Decimals);
         }
         
@@ -220,7 +221,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         foreach (var tokenId in tokenIds)
         {
             var token = await _tokenAppService.GetAsync(tokenId);
-            tokenAddress.Add(token.Address);
+            tokenAddress.Add(TronAddressToHex(token.Address));
             tokenDecimals.Add(token.Decimals);
         }
         
@@ -255,5 +256,12 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
             RefillRate = refillRate,
             MaximumTimeConsumed = maximumTimeConsumed
         };
+    }
+    
+    private static string TronAddressToHex(string value)
+    {
+        var addressByte = Base58Encoder.DecodeFromBase58Check(value);
+        addressByte = addressByte.Slice(1, addressByte.Length);
+        return addressByte.ToHex();
     }
 }
