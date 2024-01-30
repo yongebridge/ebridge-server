@@ -13,6 +13,12 @@ namespace AElf.CrossChainServer.Contracts.Bridge;
 
 public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProvider
 {
+    private class TokenDetails
+    {
+        public List<string> AddressList { get; set; }
+        public List<int> DecimalList { get; set; }
+    }
+    
     private readonly ITokenAppService _tokenAppService;
 
     public TronBridgeContractProvider(IBlockchainClientFactory<TronClient.TronClient> blockchainClientFactory,
@@ -101,12 +107,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
     public async Task<List<ReceiptIndexDto>> GetTransferReceiptIndexAsync(string chainId, string contractAddress,
         List<Guid> tokenIds, List<string> targetChainIds)
     {
-        var tokenAddress = new List<string>();
-        foreach (var tokenId in tokenIds)
-        {
-            var token = await _tokenAppService.GetAsync(tokenId);
-            tokenAddress.Add(token.Address);
-        }
+        var tokenDetails = await GetTokenDetails(tokenIds);
 
         var tronClient = BlockchainClientFactory.GetClient(chainId);
         var contractHandler = tronClient.GetContract(contractAddress);
@@ -115,7 +116,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         {
             FunctionMessage = new GetSendReceiptIndexFunctionMessage
             {
-                Tokens = tokenAddress,
+                Tokens = tokenDetails.AddressList,
                 TargetChainIds = targetChainIds
             },
             Visible = true
@@ -131,12 +132,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
 
     public async Task<List<ReceiptIndexDto>> GetReceiveReceiptIndexAsync(string chainId, string contractAddress, List<Guid> tokenIds, List<string> fromChainIds)
     {
-        var tokenAddress = new List<string>();
-        foreach (var tokenId in tokenIds)
-        {
-            var token = await _tokenAppService.GetAsync(tokenId);
-            tokenAddress.Add(token.Address);
-        }
+        var tokenDetails = await GetTokenDetails(tokenIds);
 
         var tronClient = BlockchainClientFactory.GetClient(chainId);
         var contractHandler = tronClient.GetContract(contractAddress);
@@ -145,7 +141,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         {
             FunctionMessage = new GetReceiveReceiptIndexFunctionMessage
             {
-                Tokens = tokenAddress,
+                Tokens = tokenDetails.AddressList,
                 FromChainIds = fromChainIds
             },
             Visible = true
@@ -189,14 +185,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
     public async Task<List<TokenBucketDto>> GetCurrentReceiptTokenBucketStatesAsync(string chainId, string contractAddress, List<Guid> tokenIds,
         List<string> targetChainIds)
     {
-        var tokenAddress = new List<string>();
-        var tokenDecimals = new List<int>();
-        foreach (var tokenId in tokenIds)
-        {
-            var token = await _tokenAppService.GetAsync(tokenId);
-            tokenAddress.Add(TronAddressToHex(token.Address));
-            tokenDecimals.Add(token.Decimals);
-        }
+        var tokenDetails = await GetTokenDetails(tokenIds);
         
         var tronClient = BlockchainClientFactory.GetClient(chainId);
         var contractHandler = tronClient.GetContract(contractAddress);
@@ -204,26 +193,19 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         {
             FunctionMessage = new GetCurrentReceiptTokenBucketStatesFunctionMessage
             {
-                Token = tokenAddress,
+                Token = tokenDetails.AddressList,
                 TargetChainId = targetChainIds
             },
             Visible = true
         });
         var tokenBuckets = receiptTokenBucket.TokenBuckets.Select((t, i) =>
-            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDecimals[i])).ToList();
+            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDetails.DecimalList[i])).ToList();
         return tokenBuckets;
     }
 
     public async Task<List<TokenBucketDto>> GetCurrentSwapTokenBucketStatesAsync(string chainId, string contractAddress, List<Guid> tokenIds, List<string> fromChainIds)
     {
-        var tokenAddress = new List<string>();
-        var tokenDecimals = new List<int>();
-        foreach (var tokenId in tokenIds)
-        {
-            var token = await _tokenAppService.GetAsync(tokenId);
-            tokenAddress.Add(TronAddressToHex(token.Address));
-            tokenDecimals.Add(token.Decimals);
-        }
+        var tokenDetails = await GetTokenDetails(tokenIds);
         
         var tronClient = BlockchainClientFactory.GetClient(chainId);
         var contractHandler = tronClient.GetContract(contractAddress);
@@ -231,13 +213,13 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         {
             FunctionMessage = new GetCurrentSwapTokenBucketStatesFunctionMessage
             {
-                Token = tokenAddress,
+                Token = tokenDetails.AddressList,
                 FromChainId = fromChainIds
             },
             Visible = true
         });
         var tokenBuckets = swapTokenBucket.SwapTokenBuckets.Select((t, i) =>
-            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDecimals[i])).ToList();
+            GetTokenBuckets(t.TokenCapacity, t.Rate, tokenDetails.DecimalList[i])).ToList();
         return tokenBuckets;
     }
     
@@ -263,5 +245,23 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         var addressByte = Base58Encoder.DecodeFromBase58Check(value);
         addressByte = addressByte.Slice(1, addressByte.Length);
         return addressByte.ToHex();
+    }
+    
+    private async Task<TokenDetails> GetTokenDetails(List<Guid> tokenIds)
+    {
+        var tokenAddressList = new List<string>();
+        var tokenDecimalList = new List<int>();
+        foreach (var tokenId in tokenIds)
+        {
+            var token = await _tokenAppService.GetAsync(tokenId);
+            tokenAddressList.Add(TronAddressToHex(token.Address));
+            tokenDecimalList.Add(token.Decimals);
+        }
+        
+        return new TokenDetails
+        {
+            AddressList = tokenAddressList,
+            DecimalList = tokenDecimalList
+        };
     }
 }
