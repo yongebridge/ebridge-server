@@ -39,7 +39,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         {
             FunctionMessage = new GetReceiptInfosFunctionMessage
             {
-                Token = token.Address,
+                Token = TronAddressToHex(token.Address),
                 TargetChainId = targetChainId,
                 FromIndex = fromIndex,
                 EndIndex = endIndex
@@ -77,7 +77,7 @@ public class TronBridgeContractProvider : TronClientProvider,IBridgeContractProv
         {
             FunctionMessage = new GetReceivedReceiptInfosFunctionMessage
             {
-                Token = token.Address,
+                Token = TronAddressToHex(token.Address),
                 FromChainId = fromChainId,
                 FromIndex = fromIndex,
                 EndIndex = endIndex
